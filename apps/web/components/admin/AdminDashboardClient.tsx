@@ -12,7 +12,8 @@ import {
   deleteListing, 
   updateUserStatus, 
   deleteUser,
-  updateBookingStatus 
+  updateBookingStatus,
+  updateListingDetails 
 } from '@/lib/actions/admin';
 import { useRouter } from 'next/navigation';
 
@@ -35,7 +36,24 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
   const [userSearch, setUserSearch] = useState('');
   const [listingSearch, setListingSearch] = useState('');
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const [editingListing, setEditingListing] = useState<any | null>(null);
   const router = useRouter();
+
+  const handleUpdateListing = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingListing) return;
+    setIsProcessing(editingListing.id);
+    try {
+      await updateListingDetails(editingListing.id, editingListing);
+      toast.success('Listing updated successfully');
+      setEditingListing(null);
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsProcessing(null);
+    }
+  };
 
   const handleListingAction = async (id: string, action: 'approve' | 'reject' | 'delete') => {
     setIsProcessing(id);
@@ -249,6 +267,12 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
                           <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
                         ) : (
                           <>
+                            <button 
+                              onClick={() => setEditingListing(l)}
+                              className="text-brand-600 hover:text-brand-700 text-xs font-bold mr-3"
+                            >
+                              Edit
+                            </button>
                             {!l.isApproved && (
                               <button 
                                 onClick={() => handleListingAction(l.id, 'approve')}
@@ -452,6 +476,77 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
             <h3 className="text-lg font-semibold text-dark-900">Financial Reports</h3>
             <p className="text-gray-500 max-w-sm mx-auto mt-2">Comprehensive financial auditing and payout management will appear here once the platform processes more volume.</p>
             <button className="btn-primary mt-6">Export Q2 Report</button>
+          </div>
+        </div>
+      )}
+      {/* Edit Listing Modal */}
+      {editingListing && (
+        <div className="fixed inset-0 bg-dark-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-scale-up">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <h3 className="text-xl font-bold text-dark-900">Edit Tool Listing</h3>
+              <button onClick={() => setEditingListing(null)} className="p-2 hover:bg-white rounded-full transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateListing} className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Tool Title</label>
+                <input 
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-brand-500 transition-colors"
+                  value={editingListing.title}
+                  onChange={(e) => setEditingListing({...editingListing, title: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Description</label>
+                <textarea 
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-brand-500 transition-colors min-h-[100px]"
+                  value={editingListing.description}
+                  onChange={(e) => setEditingListing({...editingListing, description: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Daily Price ($)</label>
+                  <input 
+                    type="number"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-brand-500 transition-colors"
+                    value={editingListing.pricePerDay}
+                    onChange={(e) => setEditingListing({...editingListing, pricePerDay: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Hourly Price ($)</label>
+                  <input 
+                    type="number"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-brand-500 transition-colors"
+                    value={editingListing.pricePerHour || ''}
+                    onChange={(e) => setEditingListing({...editingListing, pricePerHour: e.target.value})}
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setEditingListing(null)}
+                  className="btn-secondary flex-1"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isProcessing === editingListing.id}
+                  className="btn-primary flex-1"
+                >
+                  {isProcessing === editingListing.id ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Save Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

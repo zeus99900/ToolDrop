@@ -122,3 +122,31 @@ export async function deleteUser(userId: string) {
     throw new Error('Failed to delete user');
   }
 }
+
+/**
+ * Update listing details directly (Admin only)
+ */
+export async function updateListingDetails(listingId: string, data: any) {
+  const session = await auth();
+  if (!session?.user || (session.user as any).role !== 'ADMIN') {
+    throw new Error('Unauthorized');
+  }
+
+  try {
+    await prisma.listing.update({
+      where: { id: listingId },
+      data: {
+        title: data.title,
+        description: data.description,
+        pricePerDay: parseFloat(data.pricePerDay),
+        pricePerHour: data.pricePerHour ? parseFloat(data.pricePerHour) : null,
+      },
+    });
+
+    revalidatePath('/admin');
+    return { success: true };
+  } catch (error) {
+    console.error('updateListingDetails error:', error);
+    throw new Error('Failed to update listing details');
+  }
+}

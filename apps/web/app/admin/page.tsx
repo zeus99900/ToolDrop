@@ -39,6 +39,18 @@ export default async function AdminPage() {
   const allUsers = await prisma.user.findMany({
     take: 50,
     orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      avatarUrl: true,
+      role: true,
+      status: true,
+      createdAt: true,
+      totalListings: true,
+      totalRentals: true,
+    }
   });
 
   // Fetch All Listings

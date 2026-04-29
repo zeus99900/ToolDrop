@@ -122,7 +122,7 @@ export default function UserDashboardClient({ rentals }: UserDashboardClientProp
                   </div>
                   <div className="flex sm:flex-col gap-2">
                     <Link href="/contact" className="btn-secondary !py-2 !px-3 text-sm flex-1 flex items-center justify-center gap-2"><MessageSquare className="w-3.5 h-3.5" />Support</Link>
-                    {r.status === 'ACTIVE' && (
+                    {(r.status === 'ACTIVE' || r.status === 'ACTIVATED') && (
                       <button 
                         onClick={() => toast.success('Return requested! An admin will contact you for pickup shortly.')} 
                         className="btn-primary !py-2 !px-3 text-sm flex-1"

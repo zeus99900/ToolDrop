@@ -44,7 +44,7 @@ const bgColors = [
 
 export default function CategoryCard({ name, slug, iconName, count, index }: CategoryCardProps) {
   const iconKey = iconMap[iconName] || 'Wrench';
-  const IconComponent = (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[iconKey];
+  const IconComponent = (LucideIcons as any)[iconKey];
   const bgColor = bgColors[index % bgColors.length];
 
   return (

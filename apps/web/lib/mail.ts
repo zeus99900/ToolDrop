@@ -1,13 +1,16 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = 'ToolDrop <onboarding@resend.dev>'; // Use onboarding email for initial testing
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const FROM_EMAIL = 'ToolDrop <onboarding@resend.dev>'; 
 const REPLY_TO = 'support@tooldrop.ca';
+
+const isMailEnabled = !!resend && !!process.env.RESEND_API_KEY;
 
 /**
  * Send a welcome email to a new user.
  */
 export async function sendWelcomeEmail(to: string, firstName: string) {
+  if (!isMailEnabled || !resend) return;
   try {
     await resend.emails.send({
       from: FROM_EMAIL,
@@ -35,6 +38,7 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
  * Notify a lender about a new booking request.
  */
 export async function sendBookingRequestEmail(to: string, lenderName: string, renterName: string, toolName: string) {
+  if (!isMailEnabled || !resend) return;
   try {
     await resend.emails.send({
       from: FROM_EMAIL,
@@ -62,6 +66,7 @@ export async function sendBookingRequestEmail(to: string, lenderName: string, re
  * Notify a renter that their booking has been confirmed.
  */
 export async function sendBookingConfirmationEmail(to: string, renterName: string, toolName: string) {
+  if (!isMailEnabled || !resend) return;
   try {
     await resend.emails.send({
       from: FROM_EMAIL,
@@ -89,6 +94,7 @@ export async function sendBookingConfirmationEmail(to: string, renterName: strin
  * Notify a user about a new message.
  */
 export async function sendNewMessageEmail(to: string, recipientName: string, senderName: string, messagePreview: string) {
+  if (!isMailEnabled || !resend) return;
   try {
     await resend.emails.send({
       from: FROM_EMAIL,

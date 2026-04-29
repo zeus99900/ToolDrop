@@ -7,16 +7,16 @@ import ToolsClient from '@/components/tools/ToolsClient';
 import { getListings, getCategories } from '@/lib/data';
 
 interface ToolsPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function ToolsPage({ searchParams }: ToolsPageProps) {
-  // Await the searchParams object (Next.js 15+ requirement/good practice)
-  const query = typeof searchParams.q === 'string' ? searchParams.q : '';
-  const category = typeof searchParams.category === 'string' ? searchParams.category : '';
-  const sort = typeof searchParams.sort === 'string' ? searchParams.sort : 'relevance';
-  const lat = typeof searchParams.lat === 'string' ? parseFloat(searchParams.lat) : undefined;
-  const lng = typeof searchParams.lng === 'string' ? parseFloat(searchParams.lng) : undefined;
+  const resolvedParams = await searchParams;
+  const query = typeof resolvedParams.q === 'string' ? resolvedParams.q : '';
+  const category = typeof resolvedParams.category === 'string' ? resolvedParams.category : '';
+  const sort = typeof resolvedParams.sort === 'string' ? resolvedParams.sort : 'relevance';
+  const lat = typeof resolvedParams.lat === 'string' ? parseFloat(resolvedParams.lat) : undefined;
+  const lng = typeof resolvedParams.lng === 'string' ? parseFloat(resolvedParams.lng) : undefined;
 
   const [listings, categories] = await Promise.all([
     getListings({ 

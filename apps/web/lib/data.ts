@@ -92,6 +92,7 @@ export async function getListings({
         model: true,
         condition: true,
         pricePerDay: true,
+        pricePerWeek: true,
         pricePerHour: true,
         allowHourly: true,
         depositAmount: true,
@@ -100,6 +101,8 @@ export async function getListings({
         instantBook: true,
         isOfficial: true,
         images: true,
+        avgRating: true,
+        totalRentals: true,
         latitude: true, // Needed for distance calc on server
         longitude: true, // Needed for distance calc on server
         lender: {

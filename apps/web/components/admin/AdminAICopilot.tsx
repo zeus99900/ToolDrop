@@ -3,7 +3,7 @@
 import { useChat } from 'ai/react';
 import { Bot, User, Send, X, Sparkles, Terminal, BarChart3, ShieldAlert, Loader2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/design-system';
 
 export default function AdminAICopilot() {
   const [isOpen, setIsOpen] = useState(false);

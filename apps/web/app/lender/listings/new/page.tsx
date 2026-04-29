@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Upload, X, Zap, Info, MapPin } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/design-system';
 import { categories } from '@/lib/mock-data';
 import { createListing } from '@/lib/main-actions';
 import { toast } from 'sonner';

@@ -3,7 +3,7 @@ import { Star, MapPin, Truck, Calendar, Shield, ShieldCheck, Zap, Heart, Share2,
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ToolCard from '@/components/listings/ToolCard';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/design-system';
 import { conditionLabels, conditionColors, ToolCondition } from '@/lib/types';
 import { prisma } from '@repo/db';
 import { notFound } from 'next/navigation';

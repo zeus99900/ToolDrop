@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Calendar, Truck, MapPin, Shield, Zap, Info } from 'lucide-react';
+import { Calendar, Truck, MapPin, Shield, Zap, Info, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -157,11 +157,13 @@ export default function BookingSidebar({ listing }: BookingSidebarProps) {
       <div className="flex gap-2 mb-4">
         <button 
           onClick={() => setDelivery(true)}
+          disabled={listing.deliveryOption === 'PICKUP_ONLY' || (listing.deliveryRadiusKm && listing.distance > listing.deliveryRadiusKm)}
           className={cn(
             "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all",
             delivery 
               ? "bg-brand-50 text-brand-700 border-2 border-brand-200" 
-              : "bg-gray-50 text-gray-600 border-2 border-transparent hover:bg-gray-100"
+              : "bg-gray-50 text-gray-600 border-2 border-transparent hover:bg-gray-100",
+            (listing.deliveryOption === 'PICKUP_ONLY' || (listing.deliveryRadiusKm && listing.distance > listing.deliveryRadiusKm)) && "opacity-50 cursor-not-allowed"
           )}
         >
           <Truck className="w-4 h-4" />Delivery
@@ -178,6 +180,12 @@ export default function BookingSidebar({ listing }: BookingSidebarProps) {
           <MapPin className="w-4 h-4" />Pickup
         </button>
       </div>
+
+      {listing.deliveryRadiusKm && listing.distance > listing.deliveryRadiusKm && (
+        <p className="text-[10px] text-amber-600 font-medium mb-4 flex items-center gap-1">
+          <AlertTriangle className="w-3 h-3" /> Out of delivery range ({listing.deliveryRadiusKm}km). Pickup only.
+        </p>
+      )}
 
       <label className={cn(
         "flex items-center gap-3 p-3 rounded-xl border cursor-pointer mb-6 transition-colors",

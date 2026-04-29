@@ -35,6 +35,9 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
       avgRating: true,
       totalRentals: true,
       categoryId: true,
+      latitude: true,
+      longitude: true,
+      deliveryRadiusKm: true,
       lender: {
         select: {
           id: true,

@@ -13,7 +13,8 @@ import {
   updateUserStatus, 
   deleteUser,
   updateBookingStatus,
-  updateListingDetails 
+  updateListingDetails,
+  bulkImportListings 
 } from '@/lib/actions/admin';
 import { useRouter } from 'next/navigation';
 
@@ -91,6 +92,54 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
     } finally {
       setIsProcessing(null);
     }
+  };
+
+  const handleBulkImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const csv = event.target?.result as string;
+      const lines = csv.split('\n').filter(line => line.trim() !== '');
+      if (lines.length < 2) {
+        toast.error('CSV file is empty or invalid');
+        return;
+      }
+      
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const data = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim());
+        const obj: any = {};
+        headers.forEach((header, index) => {
+          obj[header] = values[index];
+        });
+        return obj;
+      });
+
+      setIsProcessing('bulk-import');
+      try {
+        const result = await bulkImportListings(data);
+        toast.success(`Successfully imported ${result.count} tools!`);
+        router.refresh();
+      } catch (err: any) {
+        toast.error(err.message);
+      } finally {
+        setIsProcessing(null);
+        e.target.value = '';
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const downloadTemplate = () => {
+    const csvContent = "title,category,pricePerDay,pricePerHour,description\nDeWalt Hammer Drill,Power Tools,25,3,Professional heavy duty drill\nExtension Ladder,Ladders,15,2,20ft aluminum ladder";
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tooldrop_bulk_template.csv';
+    a.click();
   };
 
   const filteredUsers = allUsers.filter(u => 
@@ -211,6 +260,23 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
           <div className="p-6 border-b border-gray-50 flex justify-between items-center">
             <h3 className="font-semibold text-dark-900">Platform Inventory</h3>
             <div className="flex gap-2">
+              <button 
+                onClick={downloadTemplate}
+                className="text-xs text-gray-500 hover:text-dark-900 font-medium px-3 py-1.5"
+              >
+                Download Template
+              </button>
+              <label className="cursor-pointer bg-brand-50 text-brand-700 hover:bg-brand-100 px-4 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                {isProcessing === 'bulk-import' ? 'Importing...' : 'Bulk Import CSV'}
+                <input 
+                  type="file" 
+                  accept=".csv" 
+                  className="hidden" 
+                  onChange={handleBulkImport}
+                  disabled={isProcessing === 'bulk-import'}
+                />
+              </label>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
                 <Search className="w-4 h-4 text-gray-400" />
                 <input 

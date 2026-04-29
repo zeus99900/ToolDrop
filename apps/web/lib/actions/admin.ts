@@ -10,7 +10,6 @@ import { revalidatePath } from 'next/cache';
 export async function updateBookingStatus(bookingId: string, status: string) {
   const session = await auth();
   
-  // Security check: Only admins can perform this action
   if (!session?.user || (session.user as any).role !== 'ADMIN') {
     throw new Error('Unauthorized: Admin access required');
   }
@@ -23,10 +22,7 @@ export async function updateBookingStatus(bookingId: string, status: string) {
       },
     });
 
-    // If marked as COMPLETED or CANCELLED, we should ideally release the calendar blocks
-    // For now, we'll just revalidate the admin path
     revalidatePath('/admin');
-    
     return { success: true, status: updatedBooking.status };
   } catch (error) {
     console.error('Admin updateBookingStatus error:', error);
@@ -67,7 +63,6 @@ export async function deleteListing(listingId: string) {
   }
 
   try {
-    // Delete related records first if needed, but Prisma schema has onCascade for many
     await prisma.listing.delete({
       where: { id: listingId },
     });
@@ -148,5 +143,58 @@ export async function updateListingDetails(listingId: string, data: any) {
   } catch (error) {
     console.error('updateListingDetails error:', error);
     throw new Error('Failed to update listing details');
+  }
+}
+
+/**
+ * Bulk import listings assigned to the Admin user (Official tools)
+ */
+export async function bulkImportListings(listingsData: any[]) {
+  const session = await auth();
+  if (!session?.user || (session.user as any).role !== 'ADMIN') {
+    throw new Error('Unauthorized');
+  }
+
+  try {
+    const adminId = session.user.id;
+    if (!adminId) throw new Error('Admin user ID not found');
+
+    // Get categories to map names to IDs
+    const categories = await prisma.category.findMany();
+    const categoryMap = new Map(categories.map(c => [c.name.toLowerCase(), c.id]));
+
+    // Use a default category if not found
+    const defaultCategoryId = categories[0]?.id;
+
+    const createPromises = listingsData.map(data => {
+      const categoryId = categoryMap.get(data.category?.toLowerCase()) || defaultCategoryId;
+      
+      return prisma.listing.create({
+        data: {
+          title: data.title,
+          description: data.description || 'Professional tool available for rental.',
+          pricePerDay: parseFloat(data.pricePerDay) || 0,
+          pricePerHour: data.pricePerHour ? parseFloat(data.pricePerHour) : null,
+          allowHourly: !!data.pricePerHour,
+          condition: 'EXCELLENT',
+          locationName: 'ToolDrop Main Hub',
+          latitude: 44.6488, // Halifax
+          longitude: -63.5752,
+          isApproved: true,
+          isOfficial: true,
+          lenderId: adminId,
+          categoryId: categoryId,
+          images: data.imageUrl ? [data.imageUrl] : ['https://images.unsplash.com/photo-1581244277943-fe4a9c777189?q=80&w=800&auto=format&fit=crop'],
+        }
+      });
+    });
+
+    await Promise.all(createPromises);
+
+    revalidatePath('/admin');
+    return { success: true, count: listingsData.length };
+  } catch (error: any) {
+    console.error('bulkImportListings error:', error);
+    throw new Error(`Bulk import failed: ${error.message}`);
   }
 }

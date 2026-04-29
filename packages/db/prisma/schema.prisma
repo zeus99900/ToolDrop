@@ -1,0 +1,504 @@
+// packages/db/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────
+
+enum UserRole {
+  RENTER
+  LENDER
+  BOTH
+  ADMIN
+}
+
+enum AccountStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum ToolCondition {
+  LIKE_NEW
+  EXCELLENT
+  GOOD
+  FAIR
+}
+
+enum DeliveryOption {
+  PICKUP_ONLY
+  DELIVERY_ONLY
+  BOTH
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  ACTIVE
+  RETURN_PENDING
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum PaymentStatus {
+  PENDING
+  HELD
+  RELEASED
+  REFUNDED
+  FAILED
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED_RENTER
+  RESOLVED_LENDER
+  ESCALATED
+}
+
+enum NotificationType {
+  BOOKING_REQUEST
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  TOOL_DISPATCHED
+  TOOL_RETURNED
+  REVIEW_RECEIVED
+  MESSAGE_RECEIVED
+  PAYOUT_PROCESSED
+  DISPUTE_OPENED
+  DISPUTE_RESOLVED
+  ACCOUNT_VERIFIED
+  PROMOTIONAL
+}
+
+// ─── USERS ───────────────────────────────────────────────
+
+model User {
+  id                    String         @id @default(cuid())
+  email                 String         @unique
+  emailVerified         DateTime?
+  passwordHash          String?
+  firstName             String
+  lastName              String
+  avatarUrl             String?
+  phone                 String?
+  phoneVerified         Boolean        @default(false)
+  role                  UserRole       @default(RENTER)
+  status                AccountStatus  @default(PENDING_VERIFICATION)
+  bio                   String?
+  idVerified            Boolean        @default(false)
+  idVerificationRef     String?
+  stripeCustomerId      String?
+  stripeAccountId       String?
+  stripeAccountVerified Boolean        @default(false)
+  totalRentals          Int            @default(0)
+  totalListings         Int            @default(0)
+  avgRatingAsRenter     Float?
+  avgRatingAsLender     Float?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  lastLoginAt           DateTime?
+
+  addresses             Address[]
+  listings              Listing[]
+  kits                  Kit[]
+  bookingsAsRenter      Booking[]      @relation("RenterBookings")
+  bookingsAsLender      Booking[]      @relation("LenderBookings")
+  reviewsGiven          Review[]       @relation("ReviewsGiven")
+  reviewsReceived       Review[]       @relation("ReviewsReceived")
+  savedListings         SavedListing[]
+  notifications         Notification[]
+  sentMessages          Message[]      @relation("SentMessages")
+  conversations         Conversation[] @relation("ConversationParticipants")
+  disputes              Dispute[]
+  sessions              Session[]
+  accounts              Account[]
+
+  @@index([email])
+  @@index([status])
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Address {
+  id           String   @id @default(cuid())
+  userId       String
+  label        String
+  line1        String
+  line2        String?
+  city         String
+  province     String
+  postalCode   String
+  country      String   @default("CA")
+  latitude     Float
+  longitude    Float
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── TOOL LISTINGS ───────────────────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  iconName    String?
+  parentId    String?
+  parent      Category? @relation("SubCategories", fields: [parentId], references: [id])
+  children    Category[] @relation("SubCategories")
+  listings    Listing[]
+  createdAt   DateTime  @default(now())
+}
+
+model Listing {
+  id                  String         @id @default(cuid())
+  lenderId            String
+  categoryId          String
+  title               String
+  slug                String         @unique
+  description         String
+  brand               String?
+  model               String?
+  condition           ToolCondition
+  images              String[]
+  pricePerDay         Float
+  pricePerWeek        Float?
+  pricePerMonth       Float?
+  depositAmount       Float
+  deliveryOption      DeliveryOption @default(BOTH)
+  deliveryFee         Float?
+  deliveryRadiusKm    Float?
+  pickupAddressId     String?
+  latitude            Float
+  longitude           Float
+  isAvailable         Boolean        @default(true)
+  isApproved          Boolean        @default(false)
+  isFeatured          Boolean        @default(false)
+  viewCount           Int            @default(0)
+  totalRentals        Int            @default(0)
+  avgRating           Float?
+  tags                String[]
+  specifications      Json?
+  minimumRentalDays   Int            @default(1)
+  maximumRentalDays   Int?
+  advanceBookingDays  Int            @default(90)
+  instantBook         Boolean        @default(false)
+  requiresIdVerify    Boolean        @default(false)
+  isOfficial          Boolean        @default(false)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  lender              User           @relation(fields: [lenderId], references: [id])
+  category            Category       @relation(fields: [categoryId], references: [id])
+  bookings            Booking[]
+  availability        Availability[]
+  savedBy             SavedListing[]
+  reviews             Review[]
+  kitItems            KitItem[]
+
+  @@index([lenderId])
+  @@index([categoryId])
+  @@index([latitude, longitude])
+  @@index([isAvailable, isApproved])
+  @@index([slug])
+}
+
+model Availability {
+  id          String   @id @default(cuid())
+  listingId   String
+  date        DateTime @db.Date
+  isBlocked   Boolean  @default(true)
+  reason      String?
+  bookingId   String?
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, date])
+  @@index([listingId, date])
+}
+
+// ─── KITS ────────────────────────────────────────────────
+
+model Kit {
+  id            String    @id @default(cuid())
+  lenderId      String
+  title         String
+  slug          String    @unique
+  description   String
+  images        String[]
+  pricePerDay   Float
+  pricePerWeek  Float?
+  depositAmount Float
+  deliveryOption DeliveryOption @default(BOTH)
+  deliveryFee   Float?
+  isAvailable   Boolean   @default(true)
+  isApproved    Boolean   @default(false)
+  viewCount     Int       @default(0)
+  totalRentals  Int       @default(0)
+  avgRating     Float?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  lender        User      @relation(fields: [lenderId], references: [id])
+  items         KitItem[]
+  bookings      Booking[]
+  reviews       Review[]
+  savedBy       SavedListing[]
+
+  @@index([lenderId])
+}
+
+model KitItem {
+  id        String  @id @default(cuid())
+  kitId     String
+  listingId String
+  quantity  Int     @default(1)
+  kit       Kit     @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  listing   Listing @relation(fields: [listingId], references: [id])
+}
+
+// ─── BOOKINGS ────────────────────────────────────────────
+
+model Booking {
+  id                  String        @id @default(cuid())
+  renterId            String
+  lenderId            String
+  listingId           String?
+  kitId               String?
+  status              BookingStatus @default(PENDING)
+  startDate           DateTime      @db.Date
+  endDate             DateTime      @db.Date
+  totalDays           Int
+  pricePerDay         Float
+  subtotal            Float
+  platformFee         Float
+  deliveryFee         Float         @default(0)
+  damageProtectionFee Float         @default(0)
+  depositAmount       Float
+  totalCharged        Float
+  isDelivery          Boolean       @default(false)
+  deliveryAddressId   String?
+  pickupAddressId     String?
+  deliveryNotes       String?
+  renterNotes         String?
+  lenderNotes         String?
+  checkoutImageUrls   String[]
+  checkinImageUrls    String[]
+  damageProtection    Boolean       @default(false)
+  confirmedAt         DateTime?
+  cancelledAt         DateTime?
+  cancelledBy         String?
+  cancellationReason  String?
+  activatedAt         DateTime?
+  returnRequestedAt   DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  renter              User          @relation("RenterBookings", fields: [renterId], references: [id])
+  lender              User          @relation("LenderBookings", fields: [lenderId], references: [id])
+  listing             Listing?      @relation(fields: [listingId], references: [id])
+  kit                 Kit?          @relation(fields: [kitId], references: [id])
+  payment             Payment?
+  dispute             Dispute?
+  reviews             Review[]
+  conversation        Conversation?
+
+  @@index([renterId])
+  @@index([lenderId])
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+// ─── PAYMENTS ────────────────────────────────────────────
+
+model Payment {
+  id                    String        @id @default(cuid())
+  bookingId             String        @unique
+  renterId              String
+  lenderId              String
+  stripePaymentIntentId String        @unique
+  stripeTransferId      String?
+  depositHoldId         String?
+  status                PaymentStatus @default(PENDING)
+  amount                Float
+  depositAmount         Float
+  platformFee           Float
+  lenderPayout          Float
+  currency              String        @default("CAD")
+  depositReleasedAt     DateTime?
+  payoutReleasedAt      DateTime?
+  refundedAt            DateTime?
+  refundAmount          Float?
+  refundReason          String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  booking               Booking       @relation(fields: [bookingId], references: [id])
+}
+
+// ─── REVIEWS ─────────────────────────────────────────────
+
+model Review {
+  id            String   @id @default(cuid())
+  bookingId     String
+  reviewerId    String
+  revieweeId    String
+  listingId     String?
+  kitId         String?
+  rating        Int
+  comment       String
+  ratingAccuracy Int?
+  ratingCondition Int?
+  ratingCommunication Int?
+  isForLender   Boolean
+  isPublished   Boolean  @default(true)
+  flagged       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  booking       Booking  @relation(fields: [bookingId], references: [id])
+  reviewer      User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  reviewee      User     @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+  listing       Listing? @relation(fields: [listingId], references: [id])
+  kit           Kit?     @relation(fields: [kitId], references: [id])
+
+  @@unique([bookingId, reviewerId])
+  @@index([revieweeId])
+  @@index([listingId])
+}
+
+// ─── MESSAGING ───────────────────────────────────────────
+
+model Conversation {
+  id          String    @id @default(cuid())
+  bookingId   String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  booking     Booking   @relation(fields: [bookingId], references: [id])
+  participants User[]   @relation("ConversationParticipants")
+  messages    Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+  imageUrl       String?
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@index([conversationId])
+}
+
+// ─── DISPUTES ────────────────────────────────────────────
+
+model Dispute {
+  id            String        @id @default(cuid())
+  bookingId     String        @unique
+  raisedById    String
+  reason        String
+  description   String
+  evidenceUrls  String[]
+  status        DisputeStatus @default(OPEN)
+  resolution    String?
+  resolvedById  String?
+  resolvedAt    DateTime?
+  damageAmount  Float?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  booking       Booking       @relation(fields: [bookingId], references: [id])
+  raisedBy      User          @relation(fields: [raisedById], references: [id])
+}
+
+// ─── SAVED / WISHLIST ─────────────────────────────────────
+
+model SavedListing {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String?
+  kitId     String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  kit       Kit?     @relation(fields: [kitId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@unique([userId, kitId])
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+// ─── PLATFORM CONFIG ──────────────────────────────────────
+
+model PlatformConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

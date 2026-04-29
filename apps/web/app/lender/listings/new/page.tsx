@@ -30,6 +30,8 @@ export default function CreateListingPage() {
   const [description, setDescription] = useState('');
   const [pricePerDay, setPricePerDay] = useState('');
   const [pricePerWeek, setPricePerWeek] = useState('');
+  const [pricePerHour, setPricePerHour] = useState('');
+  const [allowHourly, setAllowHourly] = useState(false);
   const [deposit, setDeposit] = useState('');
   const [deliveryOption, setDeliveryOption] = useState('BOTH');
   const [deliveryFee, setDeliveryFee] = useState('');
@@ -53,6 +55,8 @@ export default function CreateListingPage() {
         description,
         pricePerDay: Number(pricePerDay),
         pricePerWeek: pricePerWeek ? Number(pricePerWeek) : undefined,
+        pricePerHour: allowHourly && pricePerHour ? Number(pricePerHour) : undefined,
+        allowHourly,
         deposit: Number(deposit),
         deliveryOption: deliveryOption as any,
         deliveryFee: deliveryFee ? Number(deliveryFee) : undefined,
@@ -178,19 +182,60 @@ export default function CreateListingPage() {
       {/* Step 4: Pricing */}
       {step === 4 && (<div className="space-y-6 animate-fade-in">
         <h2 className="text-xl font-semibold text-dark-900">Pricing</h2>
-        <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Price per day (CAD) *</label>
-          <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span><input type="number" value={pricePerDay} onChange={e => { setPricePerDay(e.target.value); if (e.target.value) { setPricePerWeek(String(Math.round(Number(e.target.value) * 6))); setDeposit(String(Math.round(Number(e.target.value) * 5))); } }} placeholder="0.00" className="input-field !pl-8" /></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Price per day (CAD) *</label>
+            <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span><input type="number" value={pricePerDay} onChange={e => { setPricePerDay(e.target.value); if (e.target.value) { setPricePerWeek(String(Math.round(Number(e.target.value) * 6))); setDeposit(String(Math.round(Number(e.target.value) * 5))); if(!pricePerHour) setPricePerHour(String((Number(e.target.value) / 8).toFixed(2))); } }} placeholder="0.00" className="input-field !pl-8" /></div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Weekly rate (optional)</label>
+            <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span><input type="number" value={pricePerWeek} onChange={e => setPricePerWeek(e.target.value)} placeholder="Auto: 6x daily" className="input-field !pl-8" /></div>
+          </div>
         </div>
-        <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Weekly rate (optional)</label>
-          <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span><input type="number" value={pricePerWeek} onChange={e => setPricePerWeek(e.target.value)} placeholder="Auto: 6x daily" className="input-field !pl-8" /></div>
-          <p className="text-xs text-gray-400 mt-1">Suggested: 6x daily rate</p>
+
+        <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={allowHourly} 
+              onChange={e => setAllowHourly(e.target.checked)}
+              className="w-5 h-5 rounded border-gray-300 text-brand-500 focus:ring-brand-500" 
+            />
+            <div>
+              <p className="text-sm font-medium text-dark-900">Enable Hourly Rental</p>
+              <p className="text-xs text-gray-500">Perfect for small tools and quick jobs</p>
+            </div>
+          </label>
+          
+          {allowHourly && (
+            <div className="mt-4 animate-in slide-in-from-top-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Price per hour (CAD)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                <input 
+                  type="number" 
+                  value={pricePerHour} 
+                  onChange={e => setPricePerHour(e.target.value)} 
+                  placeholder="e.g. 1.00" 
+                  className="input-field !pl-8" 
+                />
+              </div>
+            </div>
+          )}
         </div>
+
         <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Security deposit *</label>
           <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span><input type="number" value={deposit} onChange={e => setDeposit(e.target.value)} placeholder="Auto: 5x daily" className="input-field !pl-8" /></div>
           <p className="text-xs text-gray-400 mt-1">Held on renter's card, released after return</p>
         </div>
+
         {pricePerDay && (<div className="bg-brand-50 rounded-xl p-4"><p className="text-sm font-medium text-dark-900 mb-2">Earnings preview</p>
-          <div className="space-y-1 text-sm"><div className="flex justify-between"><span className="text-gray-500">Daily rental</span><span className="text-dark-900">${pricePerDay}</span></div><div className="flex justify-between"><span className="text-gray-500">Platform fee (15%)</span><span className="text-red-500">-${(Number(pricePerDay) * 0.15).toFixed(2)}</span></div><div className="flex justify-between pt-1 border-t border-brand-200"><span className="font-medium text-dark-900">You earn</span><span className="font-bold text-green-600">${(Number(pricePerDay) * 0.85).toFixed(2)}/day</span></div></div>
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between"><span className="text-gray-500">Daily rental</span><span className="text-dark-900">${pricePerDay}</span></div>
+            {allowHourly && pricePerHour && <div className="flex justify-between"><span className="text-gray-500">Hourly rental</span><span className="text-dark-900">${pricePerHour}</span></div>}
+            <div className="flex justify-between"><span className="text-gray-500">Platform fee (15%)</span><span className="text-red-500">-${(Number(pricePerDay) * 0.15).toFixed(2)}</span></div>
+            <div className="flex justify-between pt-1 border-t border-brand-200"><span className="font-medium text-dark-900">You earn</span><span className="font-bold text-green-600">${(Number(pricePerDay) * 0.85).toFixed(2)}/day</span></div>
+          </div>
         </div>)}
       </div>)}
 

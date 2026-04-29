@@ -229,7 +229,7 @@ export async function sendMessage(conversationId: string, text: string) {
         Promise.all([
           sendNewMessageEmail(
             participant.email,
-            participant.firstName,
+            participant.firstName || 'Neighbor',
             session.user.name || 'A user',
             text.trim().substring(0, 50) + '...'
           ),
@@ -303,7 +303,7 @@ export async function respondToBooking(bookingId: string, action: 'ACCEPT' | 'DE
   if (action === 'ACCEPT') {
     sendBookingConfirmationEmail(
       booking.renter.email,
-      booking.renter.firstName,
+      booking.renter.firstName || 'Neighbor',
       booking.listing?.title || 'your rental'
     ).catch(console.error);
   }

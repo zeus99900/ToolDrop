@@ -126,13 +126,13 @@ export async function createBooking(data: {
   Promise.all([
     sendBookingRequestEmail(
       lender.email, 
-      lender.firstName, 
-      renter.firstName, 
+      lender.firstName || 'Neighbor', 
+      renter.firstName || 'Neighbor', 
       listing.title
     ),
     lender.phone ? notifyLenderOfBooking(
       lender.phone,
-      renter.firstName,
+      renter.firstName || 'Neighbor',
       listing.title
     ) : Promise.resolve()
   ]).catch(console.error);

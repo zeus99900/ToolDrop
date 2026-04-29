@@ -1,9 +1,15 @@
 'use client';
 
 import { useChat } from 'ai/react';
+import { type Message } from 'ai';
 import { Bot, User, Send, X, MessageCircle, Wrench, Loader2, Minus, Maximize2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { cn } from '@/lib/design-system';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 import Link from 'next/link';
 
 export default function UserAIAssistant() {
@@ -90,7 +96,7 @@ export default function UserAIAssistant() {
               </div>
             )}
 
-            {messages.map((m) => (
+            {messages.map((m: Message) => (
               <div key={m.id} className={cn(
                 "flex gap-3",
                 m.role === 'user' ? "flex-row-reverse" : "flex-row"

@@ -3,7 +3,12 @@
 import { useState, useMemo } from 'react';
 import { Calendar, Truck, MapPin, Shield, Zap, Info, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-import { cn } from '@/lib/design-system';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 import { useRouter } from 'next/navigation';
 
 interface BookingSidebarProps {

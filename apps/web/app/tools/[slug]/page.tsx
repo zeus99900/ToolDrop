@@ -3,7 +3,12 @@ import { Star, MapPin, Truck, Calendar, Shield, ShieldCheck, Zap, Heart, Share2,
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ToolCard from '@/components/listings/ToolCard';
-import { cn } from '@/lib/design-system';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 import { conditionLabels, conditionColors, ToolCondition } from '@/lib/types';
 import { prisma } from '@repo/db';
 import { notFound } from 'next/navigation';

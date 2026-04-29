@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Truck, MapPin, Shield, Calendar, ArrowRight, Check, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { cn } from '@/lib/design-system';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 import { useSearchParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';

@@ -1,9 +1,15 @@
 'use client';
 
 import { useChat } from 'ai/react';
+import { type Message } from 'ai';
 import { Bot, User, Send, X, Sparkles, Terminal, BarChart3, ShieldAlert, Loader2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { cn } from '@/lib/design-system';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export default function AdminAICopilot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -90,7 +96,7 @@ export default function AdminAICopilot() {
             </div>
           )}
           
-          {messages.map((m) => (
+          {messages.map((m: Message) => (
             <div key={m.id} className={cn(
               "flex gap-4 animate-in fade-in slide-in-from-bottom-2",
               m.role === 'user' ? "flex-row-reverse" : "flex-row"

@@ -3,9 +3,18 @@
 import { useState } from 'react';
 import { 
   Users, Package, DollarSign, AlertTriangle, ArrowUpRight, Shield, 
-  Search, MoreVertical, Check, X, Calendar 
+  Search, MoreVertical, Check, X, Calendar, Loader2, Trash2, Ban 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { 
+  updateListingStatus, 
+  deleteListing, 
+  updateUserStatus, 
+  deleteUser,
+  updateBookingStatus 
+} from '@/lib/actions/admin';
+import { useRouter } from 'next/navigation';
 
 type Tab = 'overview' | 'users' | 'listings' | 'bookings' | 'finance' | 'disputes';
 
@@ -25,6 +34,46 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
   const [tab, setTab] = useState<Tab>('overview');
   const [userSearch, setUserSearch] = useState('');
   const [listingSearch, setListingSearch] = useState('');
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handleListingAction = async (id: string, action: 'approve' | 'reject' | 'delete') => {
+    setIsProcessing(id);
+    try {
+      if (action === 'delete') {
+        if (!confirm('Are you sure you want to permanently delete this tool?')) return;
+        await deleteListing(id);
+        toast.success('Listing deleted');
+      } else {
+        await updateListingStatus(id, action === 'approve');
+        toast.success(action === 'approve' ? 'Listing approved' : 'Listing rejected');
+      }
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  const handleUserAction = async (id: string, action: 'suspend' | 'activate' | 'delete') => {
+    setIsProcessing(id);
+    try {
+      if (action === 'delete') {
+        if (!confirm('Permanently delete this user and all their data?')) return;
+        await deleteUser(id);
+        toast.success('User deleted');
+      } else {
+        await updateUserStatus(id, action === 'suspend' ? 'SUSPENDED' : 'ACTIVE');
+        toast.success(`User ${action === 'suspend' ? 'suspended' : 'activated'}`);
+      }
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsProcessing(null);
+    }
+  };
 
   const filteredUsers = allUsers.filter(u => 
     u.email?.toLowerCase().includes(userSearch.toLowerCase()) || 
@@ -195,14 +244,29 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
                       {l.isOfficial && <span className="ml-1 badge bg-blue-100 text-blue-700 text-[10px]">Official</span>}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      {!l.isApproved && (
-                        <button className="text-emerald-600 hover:text-emerald-700 text-xs font-bold mr-3 flex items-center gap-1 inline-flex">
-                          <Check className="w-3 h-3" /> Approve
-                        </button>
-                      )}
-                      <button className="text-red-600 hover:text-red-700 text-xs font-bold flex items-center gap-1 inline-flex">
-                        <X className="w-3 h-3" /> {l.isApproved ? 'Delete' : 'Reject'}
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        {isProcessing === l.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                        ) : (
+                          <>
+                            {!l.isApproved && (
+                              <button 
+                                onClick={() => handleListingAction(l.id, 'approve')}
+                                className="text-emerald-600 hover:text-emerald-700 text-xs font-bold flex items-center gap-1"
+                              >
+                                <Check className="w-3 h-3" /> Approve
+                              </button>
+                            )}
+                            <button 
+                              onClick={() => handleListingAction(l.id, l.isApproved ? 'delete' : 'reject')}
+                              className="text-red-600 hover:text-red-700 text-xs font-bold flex items-center gap-1"
+                            >
+                              {l.isApproved ? <Trash2 className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                              {l.isApproved ? 'Delete' : 'Reject'}
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -340,9 +404,29 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
                     <td className="px-5 py-4">
                       <p className="text-xs text-gray-600">{u.totalListings || 0} Tools · {u.totalRentals || 0} Rentals</p>
                     </td>
-                    <td className="px-5 py-4 text-right">
-                      <button className="text-brand-600 hover:text-brand-700 text-xs font-bold mr-3">Edit</button>
-                      <button className="text-red-600 hover:text-red-700 text-xs font-bold">Suspend</button>
+                    <td className="px-5 py-4 text-right whitespace-nowrap">
+                      {isProcessing === u.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-gray-400 ml-auto" />
+                      ) : (
+                        <div className="flex justify-end gap-3">
+                          <button 
+                            onClick={() => handleUserAction(u.id, u.status === 'SUSPENDED' ? 'activate' : 'suspend')}
+                            className={cn(
+                              'text-xs font-bold flex items-center gap-1',
+                              u.status === 'SUSPENDED' ? 'text-emerald-600' : 'text-amber-600'
+                            )}
+                          >
+                            {u.status === 'SUSPENDED' ? <Check className="w-3 h-3" /> : <Ban className="w-3 h-3" />}
+                            {u.status === 'SUSPENDED' ? 'Activate' : 'Suspend'}
+                          </button>
+                          <button 
+                            onClick={() => handleUserAction(u.id, 'delete')}
+                            className="text-red-600 hover:text-red-700 text-xs font-bold flex items-center gap-1"
+                          >
+                            <Trash2 className="w-3 h-3" /> Delete
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}

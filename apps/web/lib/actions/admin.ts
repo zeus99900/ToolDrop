@@ -174,10 +174,12 @@ export async function bulkImportListings(listingsData: any[]) {
           description: data.description || 'Professional tool available for rental.',
           pricePerDay: parseFloat(data.pricePerDay) || 0,
           pricePerHour: data.pricePerHour ? parseFloat(data.pricePerHour) : null,
-          allowHourly: !!data.pricePerHour,
+          allowHourly: !!data.pricePerHour || data.allowhourly === 'true',
           condition: 'EXCELLENT',
           latitude: 44.6488, 
           longitude: -63.5752,
+          deliveryFee: data.deliveryfee ? parseFloat(data.deliveryfee) : 10, // Default $10 delivery
+          deliveryOption: 'BOTH',
           depositAmount: 0, // Admin tools have 0 deposit by default
           isApproved: true,
           isOfficial: true,

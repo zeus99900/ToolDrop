@@ -154,8 +154,17 @@ export default function ToolCard({ listing, className, featured }: ToolCardProps
 
         {/* Price */}
         <div className="flex items-baseline gap-1 pt-3 border-t border-gray-100">
-          <span className="text-lg font-bold text-dark-900">${listing.pricePerDay}</span>
-          <span className="text-sm text-gray-400">/day</span>
+          <div className="flex flex-col">
+            <span className="text-lg font-bold text-dark-900">
+              ${listing.pricePerDay}
+              <span className="text-xs text-gray-400 font-normal ml-1">/day</span>
+            </span>
+            {listing.allowHourly && listing.pricePerHour && (
+              <span className="text-xs text-brand-600 font-bold">
+                Starts at ${listing.pricePerHour}/hr
+              </span>
+            )}
+          </div>
           {listing.pricePerWeek && (
             <span className="text-xs text-gray-400 ml-auto">
               ${listing.pricePerWeek}/wk

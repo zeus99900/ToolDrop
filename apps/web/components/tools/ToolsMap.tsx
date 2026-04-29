@@ -43,7 +43,7 @@ export default function ToolsMap({ listings, center }: ToolsMapProps) {
       center={center || defaultCenter}
       options={options}
     >
-      {listings.map((listing) => (
+      {listings.map((listing: any) => (
         <MarkerF
           key={listing.id}
           position={{ lat: listing.latitude, lng: listing.longitude }}

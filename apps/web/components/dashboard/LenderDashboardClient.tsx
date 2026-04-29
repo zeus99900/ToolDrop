@@ -190,7 +190,7 @@ export default function LenderDashboardClient({ listings, bookings, stats }: Len
           {tab === 'listings' && (
             <div className="animate-fade-in grid gap-4">
               {listings.length > 0 ? (
-                listings.map((l, i) => (
+                listings.map((l: any, i: number) => (
                   <div key={l.id} className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-4 hover:shadow-md transition-shadow">
                     <div className={cn(
                       'w-14 h-14 rounded-xl bg-gradient-to-br flex items-center justify-center text-white font-bold flex-shrink-0',

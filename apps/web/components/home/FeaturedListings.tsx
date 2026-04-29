@@ -27,7 +27,7 @@ export default async function FeaturedListings() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {listings.map((listing, i) => (
+          {listings.map((listing: any, i: number) => (
             <ToolCard
               key={listing.id}
               listing={listing}

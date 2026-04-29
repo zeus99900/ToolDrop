@@ -87,8 +87,8 @@ model User {
   email                 String         @unique
   emailVerified         DateTime?
   passwordHash          String?
-  firstName             String
-  lastName              String
+  firstName             String?
+  lastName              String?
   avatarUrl             String?
   phone                 String?
   phoneVerified         Boolean        @default(false)

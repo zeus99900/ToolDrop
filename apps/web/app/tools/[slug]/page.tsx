@@ -1,13 +1,10 @@
-
-
-import { use } from 'react';
 import Link from 'next/link';
 import { Star, MapPin, Truck, Calendar, Shield, ShieldCheck, Zap, Heart, Share2, ChevronRight, MessageSquare, Clock, Check } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ToolCard from '@/components/listings/ToolCard';
 import { cn } from '@/lib/utils';
-import { conditionLabels, conditionColors } from '@/lib/types';
+import { conditionLabels, conditionColors, ToolCondition } from '@/lib/types';
 import { prisma } from '@repo/db';
 import { notFound } from 'next/navigation';
 import BookingSidebar from '@/components/listings/BookingSidebar';
@@ -57,7 +54,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
     notFound();
   }
 
-  // Cast to any for the template if needed, or better, use the type
+  // Cast to any for the template to avoid complex type intersection issues
   const listing = listingResult as any;
 
   const similar = await prisma.listing.findMany({
@@ -97,6 +94,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
       category: true,
     }
   });
+
   const gradients = ['from-brand-400 to-brand-600','from-blue-400 to-blue-600','from-emerald-400 to-emerald-600','from-purple-400 to-purple-600','from-rose-400 to-rose-600','from-amber-400 to-amber-600','from-cyan-400 to-cyan-600','from-indigo-400 to-indigo-600'];
   const gradient = gradients[parseInt(listing.id.substring(listing.id.length - 1), 16) % gradients.length || 0];
 
@@ -137,7 +135,9 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
                 <div className="absolute bottom-4 left-4 flex gap-2">
                   {listing.instantBook && <span className="badge bg-brand-500 text-white shadow-lg text-sm px-3 py-1"><Zap className="w-3.5 h-3.5" />Instant Book</span>}
                   {listing.isOfficial && <span className="badge bg-indigo-600 text-white shadow-lg text-sm px-3 py-1"><ShieldCheck className="w-3.5 h-3.5" />ToolDrop Official</span>}
-                  <span className={cn('badge shadow-lg text-sm px-3 py-1', conditionColors[listing.condition as any])}>{conditionLabels[listing.condition as any]}</span>
+                  <span className={cn('badge shadow-lg text-sm px-3 py-1', conditionColors[listing.condition as ToolCondition])}>
+                    {conditionLabels[listing.condition as ToolCondition]}
+                  </span>
                 </div>
               </div>
 
@@ -161,7 +161,14 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
               <div>
                 <h2 className="text-lg font-semibold text-dark-900 mb-3">Specifications</h2>
                 <div className="grid grid-cols-2 gap-3">
-                  {[{ label: 'Category', value: listing.category.slug.replace('-', ' ') },{ label: 'Condition', value: conditionLabels[listing.condition] },{ label: 'Brand', value: listing.brand || 'N/A' },{ label: 'Model', value: listing.model || 'N/A' },{ label: 'Min Rental', value: '1 day' },{ label: 'Deposit', value: `$${listing.depositAmount}` }].map(({ label, value }) => (
+                  {[
+                    { label: 'Category', value: listing.category.name || 'N/A' },
+                    { label: 'Condition', value: conditionLabels[listing.condition as ToolCondition] || 'N/A' },
+                    { label: 'Brand', value: listing.brand || 'N/A' },
+                    { label: 'Model', value: listing.model || 'N/A' },
+                    { label: 'Min Rental', value: '1 day' },
+                    { label: 'Deposit', value: `$${listing.depositAmount}` }
+                  ].map(({ label, value }) => (
                     <div key={label} className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl">
                       <span className="text-sm text-gray-500">{label}</span>
                       <span className="text-sm font-medium text-dark-900 capitalize">{value}</span>
@@ -173,7 +180,11 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
               <div>
                 <h2 className="text-lg font-semibold text-dark-900 mb-4">Reviews</h2>
                 <div className="space-y-4">
-                  {[{ name: 'Alex M.', rating: 5, date: '2 weeks ago', comment: 'Great tool, worked perfectly for my deck project. Super responsive lender.' },{ name: 'Priya S.', rating: 5, date: '1 month ago', comment: 'Exactly as described. Clean, well-maintained, battery lasted all day.' },{ name: 'Tom B.', rating: 4, date: '2 months ago', comment: 'Good condition, fair price. Pickup was easy.' }].map((review, i) => (
+                  {[
+                    { name: 'Alex M.', rating: 5, date: '2 weeks ago', comment: 'Great tool, worked perfectly for my deck project. Super responsive lender.' },
+                    { name: 'Priya S.', rating: 5, date: '1 month ago', comment: 'Exactly as described. Clean, well-maintained, battery lasted all day.' },
+                    { name: 'Tom B.', rating: 4, date: '2 months ago', comment: 'Good condition, fair price. Pickup was easy.' }
+                  ].map((review, i) => (
                     <div key={i} className="p-4 bg-gray-50 rounded-xl">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">

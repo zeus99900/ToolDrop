@@ -16,7 +16,7 @@ export const authConfig: NextAuthConfig = {
         return {
           id: profile.sub,
           email: profile.email,
-          image: profile.picture,
+          avatarUrl: profile.picture,
           firstName: profile.given_name,
           lastName: profile.family_name,
         } as any;
@@ -36,6 +36,7 @@ export const authConfig: NextAuthConfig = {
         token.id = user.id;
         token.firstName = (user as any).firstName;
         token.lastName = (user as any).lastName;
+        token.avatarUrl = (user as any).avatarUrl;
       }
       return token;
     },
@@ -44,6 +45,7 @@ export const authConfig: NextAuthConfig = {
         session.user.id = token.id as string;
         (session.user as any).firstName = token.firstName;
         (session.user as any).lastName = token.lastName;
+        session.user.image = token.avatarUrl as string;
         
         // Populate name for compatibility with standard components
         if (!session.user.name && (token.firstName || token.lastName)) {

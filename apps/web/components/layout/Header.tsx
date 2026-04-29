@@ -6,7 +6,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
   Search, Menu, X, Wrench, Heart, MessageSquare, Bell,
-  User, ChevronDown, LogIn, MapPin, LogOut, LayoutDashboard
+  User, ChevronDown, LogIn, MapPin, LogOut, LayoutDashboard, Shield
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

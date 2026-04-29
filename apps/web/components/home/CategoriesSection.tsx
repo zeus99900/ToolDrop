@@ -17,13 +17,13 @@ export default async function CategoriesSection() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {categories.map((cat, index) => (
+          {categories.map((cat: { slug: string; name: string; iconName?: string; _count?: { listings: number } }, index: number) => (
             <CategoryCard
               key={cat.slug}
               name={cat.name}
               slug={cat.slug}
               iconName={cat.iconName || 'wrench'}
-              count={cat._count.listings}
+              count={cat._count?.listings || 0}
               index={index}
             />
           ))}

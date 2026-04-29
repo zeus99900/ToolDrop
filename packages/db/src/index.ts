@@ -1,7 +1,7 @@
-export { PrismaClient } from '../prisma/generated/client';
-export type * from '../prisma/generated/client';
+export { PrismaClient } from '@prisma/client';
+export type * from '@prisma/client';
 
-import { PrismaClient } from '../prisma/generated/client';
+import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;

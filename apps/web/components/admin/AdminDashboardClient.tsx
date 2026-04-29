@@ -88,7 +88,7 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
                       <p className="text-sm font-semibold text-dark-900">${booking.totalCharged}</p>
                       <span className={cn(
                         'text-[10px] px-2 py-0.5 rounded-full uppercase font-bold',
-                        booking.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                        (booking.status === 'CONFIRMED' || booking.status === 'ACTIVATED') ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
                       )}>
                         {booking.status}
                       </span>

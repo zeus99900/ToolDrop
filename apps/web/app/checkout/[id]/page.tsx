@@ -11,7 +11,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ id: s
   const session = await auth();
   const { id } = await params;
 
-  if (!session?.user) {
+  if (!session?.user?.id) {
     redirect(`/login?callbackUrl=/checkout/${id}`);
   }
 

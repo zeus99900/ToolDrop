@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   const result = await streamText({
-    model: ollama('llama3'),
+    model: ollama('gpt-oss:120b'),
     system: `You are the ToolDrop Admin Copilot. You help administrators manage the platform.
     You have access to tools to fetch data and perform actions.
     Be professional, concise, and helpful.

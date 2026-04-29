@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   const result = await streamText({
-    model: ollama('llama3'),
+    model: ollama('ministral-3:8b'),
     system: `You are the ToolDrop Scout, a helpful AI assistant for a tool rental marketplace in Halifax, Nova Scotia.
     Your goal is to help users find tools, explain how the platform works, and provide advice on DIY projects.
     Be friendly, helpful, and "handy". Use tool-related puns occasionally.

@@ -55,7 +55,7 @@ export default function AdminAICopilot() {
               <h3 className="font-bold text-sm">Admin Copilot</h3>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Ollama Llama 3 Online</span>
+                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Ollama GPT-OSS 120B Cloud</span>
               </div>
             </div>
           </div>

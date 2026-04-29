@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   const result = await streamText({
-    model: ollama('llama3'), // or 'mistral' or whatever model the user has
+    model: ollama('llama3') as any, // TODO: ollama-ai-provider needs update for ai SDK v6 LanguageModelV2
     system: `You are the ToolDrop Admin Copilot. You help administrators manage the platform.
     You have access to tools to fetch data and perform actions.
     Be professional, concise, and helpful.
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     tools: {
       getListingStats: tool({
         description: 'Get statistics about tool listings',
-        parameters: z.object({}),
+        inputSchema: z.object({}),
         execute: async () => {
           const total = await prisma.listing.count();
           const approved = await prisma.listing.count({ where: { isApproved: true } });
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       }),
       getUserStats: tool({
         description: 'Get statistics about users',
-        parameters: z.object({}),
+        inputSchema: z.object({}),
         execute: async () => {
           const total = await prisma.user.count();
           const active = await prisma.user.count({ where: { status: 'ACTIVE' } });
@@ -45,5 +45,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 }

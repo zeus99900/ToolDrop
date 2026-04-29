@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   const result = await streamText({
-    model: ollama('llama3'),
+    model: ollama('llama3') as any, // TODO: ollama-ai-provider needs update for ai SDK v6 LanguageModelV2
     system: `You are the ToolDrop Scout, a helpful AI assistant for a tool rental marketplace in Halifax, Nova Scotia.
     Your goal is to help users find tools, explain how the platform works, and provide advice on DIY projects.
     Be friendly, helpful, and "handy". Use tool-related puns occasionally.
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     tools: {
       searchTools: tool({
         description: 'Search for available tools in the marketplace',
-        parameters: z.object({
+        inputSchema: z.object({
           query: z.string().describe('The name or type of tool to search for'),
         }),
         execute: async ({ query }) => {
@@ -52,5 +52,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 }

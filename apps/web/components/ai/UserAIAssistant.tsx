@@ -1,7 +1,7 @@
 'use client';
 
-import { useChat } from 'ai/react';
-import { type Message } from 'ai';
+import { useChat } from '@ai-sdk/react';
+import { type UIMessage } from 'ai';
 import { Bot, User, Send, X, MessageCircle, Wrench, Loader2, Minus, Maximize2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { clsx, type ClassValue } from 'clsx';
@@ -15,7 +15,8 @@ import Link from 'next/link';
 export default function UserAIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+  const { messages, sendMessage, status } = useChat();
+  const [input, setInput] = useState('');
   
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -86,7 +87,7 @@ export default function UserAIAssistant() {
                   ].map((q) => (
                     <button 
                       key={q}
-                      onClick={() => handleInputChange({ target: { value: q } } as any)}
+                      onClick={() => setInput(q)}
                       className="text-left p-3 rounded-xl bg-white border border-gray-100 text-xs text-gray-600 hover:border-brand-500 hover:text-brand-600 transition-all shadow-sm"
                     >
                       "{q}"
@@ -96,7 +97,7 @@ export default function UserAIAssistant() {
               </div>
             )}
 
-            {messages.map((m: Message) => (
+            {messages.map((m: UIMessage) => (
               <div key={m.id} className={cn(
                 "flex gap-3",
                 m.role === 'user' ? "flex-row-reverse" : "flex-row"
@@ -113,11 +114,11 @@ export default function UserAIAssistant() {
                     ? "bg-dark-900 text-white rounded-tr-none" 
                     : "bg-white text-dark-900 rounded-tl-none border border-gray-100 shadow-sm"
                 )}>
-                  {m.content}
+                  {m.parts?.filter(p => p.type === 'text').map(p => p.text).join('') || ''}
                 </div>
               </div>
             ))}
-            {isLoading && (
+            {(status === 'streaming' || status === 'submitted') && (
               <div className="flex gap-3">
                 <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center animate-bounce">
                   <Bot className="w-4 h-4 text-white" />
@@ -132,16 +133,16 @@ export default function UserAIAssistant() {
 
           {/* Input */}
           <div className="p-4 border-t border-gray-100 bg-white">
-            <form onSubmit={handleSubmit} className="relative">
+            <form onSubmit={(e) => { e.preventDefault(); if (!input.trim()) return; sendMessage({ parts: [{ type: 'text', text: input }] }); setInput(''); }} className="relative">
               <input
                 value={input}
-                onChange={handleInputChange}
+                onChange={(e) => setInput(e.target.value)}
                 placeholder="Type your message..."
                 className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 pl-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all"
               />
               <button
                 type="submit"
-                disabled={isLoading || !input.trim()}
+                disabled={status !== 'ready' || !input.trim()}
                 className="absolute right-1.5 top-1.5 w-9 h-9 bg-brand-600 text-white rounded-xl flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 transition-all"
               >
                 <Send className="w-4 h-4" />

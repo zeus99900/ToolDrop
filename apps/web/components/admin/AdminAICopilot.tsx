@@ -1,7 +1,7 @@
 'use client';
 
-import { useChat } from 'ai/react';
-import { type Message } from 'ai';
+import { useChat } from '@ai-sdk/react';
+import { type UIMessage, TextStreamChatTransport } from 'ai';
 import { Bot, User, Send, X, Sparkles, Terminal, BarChart3, ShieldAlert, Loader2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { clsx, type ClassValue } from 'clsx';
@@ -13,9 +13,10 @@ function cn(...inputs: ClassValue[]) {
 
 export default function AdminAICopilot() {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/admin/chat',
+  const { messages, sendMessage, status } = useChat({
+    transport: new TextStreamChatTransport({ api: '/api/admin/chat' }),
   });
+  const [input, setInput] = useState('');
   
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -96,7 +97,7 @@ export default function AdminAICopilot() {
             </div>
           )}
           
-          {messages.map((m: Message) => (
+          {messages.map((m: UIMessage) => (
             <div key={m.id} className={cn(
               "flex gap-4 animate-in fade-in slide-in-from-bottom-2",
               m.role === 'user' ? "flex-row-reverse" : "flex-row"
@@ -113,11 +114,11 @@ export default function AdminAICopilot() {
                   ? "bg-brand-500 text-white rounded-tr-none" 
                   : "bg-gray-100 text-dark-900 rounded-tl-none border border-gray-200"
               )}>
-                {m.content}
+                {m.parts?.filter(p => p.type === 'text').map(p => p.text).join('') || ''}
               </div>
             </div>
           ))}
-          {isLoading && (
+          {(status === 'streaming' || status === 'submitted') && (
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-lg bg-dark-900 flex items-center justify-center animate-pulse">
                 <Bot className="w-4 h-4 text-brand-400" />
@@ -132,16 +133,16 @@ export default function AdminAICopilot() {
 
         {/* Input */}
         <div className="p-6 border-t border-gray-100 bg-white">
-          <form onSubmit={handleSubmit} className="relative">
+          <form onSubmit={(e) => { e.preventDefault(); if (!input.trim()) return; sendMessage({ parts: [{ type: 'text', text: input }] }); setInput(''); }} className="relative">
             <input
               value={input}
-              onChange={handleInputChange}
+              onChange={(e) => setInput(e.target.value)}
               placeholder="Ask the Admin Copilot..."
               className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 pl-5 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all placeholder:text-gray-400"
             />
             <button
               type="submit"
-              disabled={isLoading || !input.trim()}
+              disabled={status !== 'ready' || !input.trim()}
               className="absolute right-2 top-2 w-10 h-10 bg-dark-900 text-white rounded-xl flex items-center justify-center hover:bg-brand-600 disabled:opacity-50 disabled:hover:bg-dark-900 transition-all shadow-lg"
             >
               <Send className="w-4 h-4" />

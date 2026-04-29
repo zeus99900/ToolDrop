@@ -139,7 +139,6 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
         </div>
       )}
 
-      {/* Other tabs can be implemented similarly with tables */}
       {tab === 'listings' && (
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-fade-in">
           <div className="p-6 border-b border-gray-50 flex justify-between items-center">
@@ -277,6 +276,7 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
           </div>
         </div>
       )}
+
       {tab === 'users' && (
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-fade-in">
           <div className="p-6 border-b border-gray-50 flex justify-between items-center">
@@ -371,7 +371,6 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
           </div>
         </div>
       )}
-        < / d i v > 
-     ) ; 
- }  
- 
+    </div>
+  );
+}

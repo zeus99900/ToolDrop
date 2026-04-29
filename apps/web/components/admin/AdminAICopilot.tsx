@@ -149,7 +149,7 @@ export default function AdminAICopilot() {
             </button>
           </form>
           <p className="text-[10px] text-gray-400 mt-4 text-center">
-            Powered by <b>Ollama</b> · Local & Private
+            Powered by <b>Ollama</b> · Ollama Cloud Powered
           </p>
         </div>
       </div>

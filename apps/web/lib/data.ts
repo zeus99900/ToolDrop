@@ -1,40 +1,5 @@
 import { prisma } from '@repo/db';
 
-/**
- * Fetch featured listings for the homepage.
- */
-export async function getFeaturedListings(limit = 8) {
-  try {
-    const listings = await prisma.listing.findMany({
-        where: {
-          isApproved: true,
-          isAvailable: true,
-        },
-        take: limit,
-        include: {
-          lender: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              avatarUrl: true,
-              avgRatingAsLender: true,
-              totalRentals: true,
-            },
-          },
-          category: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-
-    return JSON.parse(JSON.stringify(listings));
-  } catch (error) {
-    console.error("Error fetching featured listings:", error);
-    return [];
-  }
-}
 
 /**
  * Fetch listings based on search and filter parameters.
@@ -151,6 +116,43 @@ export async function getListings({
 }
 
 /**
+ * Fetch featured listings for the homepage.
+ */
+export async function getFeaturedListings(limit = 8) {
+  try {
+    const listings = await prisma.listing.findMany({
+        where: {
+          isApproved: true,
+          isAvailable: true,
+        },
+        take: limit,
+        include: {
+          lender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+              avgRatingAsLender: true,
+              totalRentals: true,
+            },
+          },
+          category: true,
+        },
+        orderBy: [
+          { isOfficial: 'desc' },
+          { createdAt: 'desc' }
+        ],
+      });
+
+    return JSON.parse(JSON.stringify(listings));
+  } catch (error) {
+    console.error("Error fetching featured listings:", error);
+    return [];
+  }
+}
+
+/**
  * Fetch all categories with their listing counts.
  */
 export async function getCategories() {
@@ -158,7 +160,11 @@ export async function getCategories() {
     const categories = await prisma.category.findMany({
         include: {
           _count: {
-            select: { listings: true }
+            select: { 
+              listings: {
+                where: { isApproved: true }
+              } 
+            }
           }
         },
       orderBy: {

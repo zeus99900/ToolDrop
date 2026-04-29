@@ -104,9 +104,13 @@ export default function UserDashboardClient({ rentals }: UserDashboardClientProp
                     </div>
                     <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
                       <div className="w-5 h-5 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-[8px] font-bold">
-                        {r.lender.firstName.charAt(0)}
+                        {r.lender.firstName?.charAt(0) || r.lender.email?.charAt(0) || 'U'}
                       </div>
-                      <span>{r.lender.firstName} {r.lender.lastName}</span>
+                      <span>
+                        {r.lender.firstName && r.lender.lastName 
+                          ? `${r.lender.firstName} ${r.lender.lastName}` 
+                          : r.lender.firstName || r.lender.email.split('@')[0]}
+                      </span>
                     </div>
                   </div>
                   <div className="flex sm:flex-col gap-2">

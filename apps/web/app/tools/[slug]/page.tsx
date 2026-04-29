@@ -163,8 +163,21 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
 
                 <div className="bg-white rounded-2xl border border-gray-200 p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-bold">{listing.lender.firstName.charAt(0)}</div>
-                    <div><p className="font-semibold text-dark-900">{listing.lender.firstName} {listing.lender.lastName}</p><div className="flex items-center gap-1 text-sm text-gray-500"><Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /><span>{listing.lender.avgRatingAsLender}</span><span>· {listing.lender.totalRentals} rentals</span></div></div>
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-bold">
+                      {listing.lender.firstName?.charAt(0) || listing.lender.email?.charAt(0) || 'U'}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-dark-900">
+                        {listing.lender.firstName && listing.lender.lastName 
+                          ? `${listing.lender.firstName} ${listing.lender.lastName}` 
+                          : listing.lender.firstName || listing.lender.email.split('@')[0]}
+                      </p>
+                      <div className="flex items-center gap-1 text-sm text-gray-500">
+                        <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        <span>{listing.lender.avgRatingAsLender || '0.0'}</span>
+                        <span>· {listing.lender.totalRentals} rentals</span>
+                      </div>
+                    </div>
                   </div>
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2 text-sm text-gray-500"><Check className="w-4 h-4 text-green-500" /><span>Identity verified</span></div>

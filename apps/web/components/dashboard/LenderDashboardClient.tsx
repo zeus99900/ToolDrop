@@ -251,9 +251,11 @@ export default function LenderDashboardClient({ listings, bookings, stats }: Len
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-[10px] font-bold">
-                            {b.renter.firstName.charAt(0)}
+                            {b.renter.firstName?.charAt(0) || b.renter.email?.charAt(0) || 'U'}
                           </div>
-                          {b.renter.firstName} {b.renter.lastName} · ★{b.renter.avgRatingAsRenter || 'N/A'}
+                          {b.renter.firstName && b.renter.lastName 
+                            ? `${b.renter.firstName} ${b.renter.lastName}` 
+                            : b.renter.firstName || b.renter.email.split('@')[0]} · ★{b.renter.avgRatingAsRenter || 'N/A'}
                         </div>
                         <span className="font-semibold text-dark-900">${b.totalCharged}</span>
                       </div>

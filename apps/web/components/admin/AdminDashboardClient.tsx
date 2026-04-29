@@ -103,10 +103,14 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers }
                 {allUsers.slice(0, 5).map((user) => (
                   <div key={user.id} className="flex items-center gap-3 py-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-xs font-bold">
-                      {user.firstName.charAt(0)}
+                      {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-dark-900">{user.firstName} {user.lastName}</p>
+                      <p className="text-sm font-medium text-dark-900">
+                        {user.firstName && user.lastName 
+                          ? `${user.firstName} ${user.lastName}` 
+                          : user.firstName || user.email.split('@')[0]}
+                      </p>
                       <p className="text-xs text-gray-400">{user.email}</p>
                     </div>
                     <span className="text-[10px] text-gray-400">

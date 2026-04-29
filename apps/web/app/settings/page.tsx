@@ -13,8 +13,8 @@ export default function SettingsPage() {
   const { data: session } = useSession();
   const [tab, setTab] = useState<Tab>('profile');
   const [saved, setSaved] = useState(false);
-  const [firstName, setFirstName] = useState('Dev');
-  const [lastName, setLastName] = useState('User');
+  const [firstName, setFirstName] = useState(session?.user?.name?.split(' ')[0] || (session?.user as any)?.firstName || 'Dev');
+  const [lastName, setLastName] = useState(session?.user?.name?.split(' ')[1] || (session?.user as any)?.lastName || 'User');
   const [email] = useState(session?.user?.email || 'dev@tooldrop.ca');
   const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('');
@@ -61,7 +61,7 @@ export default function SettingsPage() {
             <div className="flex items-center gap-5">
               <div className="relative">
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-2xl font-bold">
-                  {firstName.charAt(0)}{lastName.charAt(0)}
+                  {firstName?.charAt(0) || email?.charAt(0) || 'U'}{lastName?.charAt(0) || ''}
                 </div>
                 <button className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-colors">
                   <Camera className="w-4 h-4 text-gray-500" />

@@ -38,6 +38,7 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
   const [listingSearch, setListingSearch] = useState('');
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [editingListing, setEditingListing] = useState<any | null>(null);
+  const [bulkPreview, setBulkPreview] = useState<any[] | null>(null);
   const router = useRouter();
 
   const handleUpdateListing = async (e: React.FormEvent) => {
@@ -109,27 +110,34 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
       
       const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
       const data = lines.slice(1).map(line => {
-        const values = line.split(',').map(v => v.trim());
+        // Handle comma splitting with quotes support
+        const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(v => v.replace(/^"|"$/g, '').trim()) || [];
         const obj: any = {};
         headers.forEach((header, index) => {
           obj[header] = values[index];
         });
         return obj;
-      });
+      }).filter(item => item.title); // Ensure at least title exists
 
-      setIsProcessing('bulk-import');
-      try {
-        const result = await bulkImportListings(data);
-        toast.success(`Successfully imported ${result.count} tools!`);
-        router.refresh();
-      } catch (err: any) {
-        toast.error(err.message);
-      } finally {
-        setIsProcessing(null);
-        e.target.value = '';
-      }
+      setBulkPreview(data);
+      e.target.value = '';
     };
     reader.readAsText(file);
+  };
+
+  const confirmBulkImport = async () => {
+    if (!bulkPreview) return;
+    setIsProcessing('bulk-import');
+    try {
+      const result = await bulkImportListings(bulkPreview);
+      toast.success(`Successfully imported ${result.count} tools!`);
+      setBulkPreview(null);
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsProcessing(null);
+    }
   };
 
   const downloadTemplate = () => {
@@ -275,7 +283,7 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
                 {isProcessing === 'bulk-import' ? 'Importing...' : 'Bulk Import CSV'}
                 <input 
                   type="file" 
-                  accept=".csv" 
+                  accept=".csv, text/csv, application/vnd.ms-excel" 
                   className="hidden" 
                   onChange={handleBulkImport}
                   disabled={isProcessing === 'bulk-import'}
@@ -617,6 +625,63 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Bulk Import Preview Modal */}
+      {bulkPreview && (
+        <div className="fixed inset-0 bg-dark-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[80vh] shadow-2xl overflow-hidden flex flex-col animate-scale-up">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <div>
+                <h3 className="text-xl font-bold text-dark-900">Review Import</h3>
+                <p className="text-xs text-gray-500 mt-1">Ready to import {bulkPreview.length} tools to your official inventory.</p>
+              </div>
+              <button onClick={() => setBulkPreview(null)} className="p-2 hover:bg-white rounded-full transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-0">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr className="text-left border-b border-gray-100">
+                    <th className="px-6 py-3 font-semibold text-gray-400 uppercase text-[10px]">Title</th>
+                    <th className="px-6 py-3 font-semibold text-gray-400 uppercase text-[10px]">Category</th>
+                    <th className="px-6 py-3 font-semibold text-gray-400 uppercase text-[10px]">Daily</th>
+                    <th className="px-6 py-3 font-semibold text-gray-400 uppercase text-[10px]">Hourly</th>
+                    <th className="px-6 py-3 font-semibold text-gray-400 uppercase text-[10px]">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bulkPreview.map((item, idx) => (
+                    <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50">
+                      <td className="px-6 py-4 font-medium text-dark-900">{item.title}</td>
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-0.5 bg-gray-100 rounded text-[10px] text-gray-600 font-medium">{item.category}</span>
+                      </td>
+                      <td className="px-6 py-4 text-dark-900 font-semibold">${item.priceperday}</td>
+                      <td className="px-6 py-4 text-brand-600 font-medium">${item.priceperhour || '-'}</td>
+                      <td className="px-6 py-4 text-gray-400 text-xs truncate max-w-[200px]">{item.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="p-6 border-t border-gray-100 flex gap-3 bg-gray-50">
+              <button 
+                onClick={() => setBulkPreview(null)}
+                className="btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmBulkImport}
+                disabled={isProcessing === 'bulk-import'}
+                className="btn-primary flex-1"
+              >
+                {isProcessing === 'bulk-import' ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : `Confirm & Import ${bulkPreview.length} Tools`}
+              </button>
+            </div>
           </div>
         </div>
       )}

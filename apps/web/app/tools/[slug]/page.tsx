@@ -15,17 +15,49 @@ import BookingSidebar from '@/components/listings/BookingSidebar';
 export default async function ToolDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   
-  const listing = await prisma.listing.findUnique({
+  const listingResult = await prisma.listing.findUnique({
     where: { slug },
-    include: {
-      lender: true,
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      brand: true,
+      model: true,
+      condition: true,
+      pricePerDay: true,
+      pricePerHour: true,
+      allowHourly: true,
+      depositAmount: true,
+      deliveryOption: true,
+      deliveryFee: true,
+      instantBook: true,
+      isOfficial: true,
+      images: true,
+      avgRating: true,
+      totalRentals: true,
+      categoryId: true,
+      lender: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+          avgRatingAsLender: true,
+          totalRentals: true,
+          email: true, // Only for admin/support logic, but will be filtered if needed. Actually we show initials mostly.
+        },
+      },
       category: true,
     }
   });
 
-  if (!listing) {
+  if (!listingResult) {
     notFound();
   }
+
+  // Cast to any for the template if needed, or better, use the type
+  const listing = listingResult as any;
 
   const similar = await prisma.listing.findMany({
     where: { 
@@ -35,8 +67,18 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
       isAvailable: true,
     },
     take: 4,
-    include: {
-      lender: true,
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      pricePerDay: true,
+      images: true,
+      lender: {
+        select: {
+          firstName: true,
+          avgRatingAsLender: true,
+        }
+      },
       category: true,
     }
   });

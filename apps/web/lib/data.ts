@@ -83,7 +83,25 @@ export async function getListings({
     const listings = await prisma.listing.findMany({
       where: whereClause,
       orderBy,
-      include: {
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        description: true,
+        brand: true,
+        model: true,
+        condition: true,
+        pricePerDay: true,
+        pricePerHour: true,
+        allowHourly: true,
+        depositAmount: true,
+        deliveryOption: true,
+        deliveryFee: true,
+        instantBook: true,
+        isOfficial: true,
+        images: true,
+        latitude: true, // Needed for distance calc on server
+        longitude: true, // Needed for distance calc on server
         lender: {
           select: {
             id: true,
@@ -100,18 +118,19 @@ export async function getListings({
 
     // Calculate distance if user coordinates provided
     let results = listings.map((listing: any) => {
-      if (userLat && userLng && listing.latitude && listing.longitude) {
+      const { latitude, longitude, ...safeListing } = listing;
+      if (userLat && userLng && latitude && longitude) {
         const R = 6371; // Earth's radius in km
-        const dLat = (listing.latitude - userLat) * (Math.PI / 180);
-        const dLon = (listing.longitude - userLng) * (Math.PI / 180);
+        const dLat = (latitude - userLat) * (Math.PI / 180);
+        const dLon = (longitude - userLng) * (Math.PI / 180);
         const a = 
           Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos(userLat * (Math.PI / 180)) * Math.cos(listing.latitude * (Math.PI / 180)) * 
+          Math.cos(userLat * (Math.PI / 180)) * Math.cos(latitude * (Math.PI / 180)) * 
           Math.sin(dLon / 2) * Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return { ...listing, distance: R * c };
+        return { ...safeListing, distance: R * c };
       }
-      return { ...listing, distance: null };
+      return { ...safeListing, distance: null };
     });
 
     // Sort by distance if requested

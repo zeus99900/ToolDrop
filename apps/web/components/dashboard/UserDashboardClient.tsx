@@ -15,6 +15,7 @@ interface UserDashboardClientProps {
 }
 
 const statusCfg: Record<string, { label: string; color: string }> = {
+  ACTIVATED: { label: 'In Progress', color: 'bg-emerald-100 text-emerald-700' },
   ACTIVE: { label: 'Active', color: 'bg-green-100 text-green-700' },
   CONFIRMED: { label: 'Upcoming', color: 'bg-blue-100 text-blue-700' },
   COMPLETED: { label: 'Completed', color: 'bg-gray-100 text-gray-600' },
@@ -25,7 +26,7 @@ const statusCfg: Record<string, { label: string; color: string }> = {
 export default function UserDashboardClient({ rentals }: UserDashboardClientProps) {
   const [tab, setTab] = useState<Tab>('active');
   
-  const active = rentals.filter(r => ['ACTIVE', 'CONFIRMED', 'PENDING'].includes(r.status));
+  const active = rentals.filter(r => ['ACTIVATED', 'ACTIVE', 'CONFIRMED', 'PENDING'].includes(r.status));
   const past = rentals.filter(r => ['COMPLETED', 'CANCELLED'].includes(r.status));
   
   // Review modal state

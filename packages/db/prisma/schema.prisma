@@ -42,6 +42,7 @@ enum DeliveryOption {
 enum BookingStatus {
   PENDING
   CONFIRMED
+  ACTIVATED
   ACTIVE
   RETURN_PENDING
   COMPLETED

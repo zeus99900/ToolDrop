@@ -24,6 +24,7 @@ interface LenderDashboardClientProps {
 const statusMap: Record<string, { label: string; color: string }> = {
   PENDING: { label: 'Pending', color: 'bg-amber-100 text-amber-700' },
   CONFIRMED: { label: 'Confirmed', color: 'bg-blue-100 text-blue-700' },
+  ACTIVATED: { label: 'Active', color: 'bg-emerald-100 text-emerald-700' },
   ACTIVE: { label: 'Active', color: 'bg-green-100 text-green-700' },
   RETURN_PENDING: { label: 'Return Pending', color: 'bg-purple-100 text-purple-700' },
   COMPLETED: { label: 'Completed', color: 'bg-gray-100 text-gray-600' },

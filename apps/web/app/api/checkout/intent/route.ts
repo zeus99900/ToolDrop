@@ -4,9 +4,7 @@ import { prisma } from '@repo/db';
 import Stripe from 'stripe';
 
 const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_51MockStripeSecretKeyForToolDrop123';
-const stripe = new Stripe(stripeKey, {
-  apiVersion: '2025-02-24.acacia',
-});
+const stripe = new Stripe(stripeKey);
 
 import { generalApiLimit } from '@/lib/ratelimit';
 
@@ -66,7 +64,7 @@ export async function POST(req: Request) {
     // 3. Fetch lender to get their Stripe Connect ID
     const lender = await prisma.user.findUnique({
       where: { id: listing.lenderId },
-      select: { stripeConnectId: true }
+      select: { stripeAccountId: true }
     });
 
     let clientSecret = 'pi_mock_123_secret_mock456';
@@ -95,10 +93,10 @@ export async function POST(req: Request) {
       };
 
       // 5. If lender is onboarded, split the payment
-      if (lender?.stripeConnectId) {
+      if (lender?.stripeAccountId) {
         paymentIntentOptions.application_fee_amount = Math.round(platformFee * 100);
         paymentIntentOptions.transfer_data = {
-          destination: lender.stripeConnectId,
+          destination: lender.stripeAccountId,
         };
       }
 

@@ -18,7 +18,7 @@ export async function onboardLender() {
 
   if (!user) throw new Error('User not found');
 
-  let stripeAccountId = user.stripeConnectId;
+  let stripeAccountId = user.stripeAccountId;
 
   // 1. Create a Stripe account if they don't have one
   if (!stripeAccountId) {
@@ -37,7 +37,7 @@ export async function onboardLender() {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { stripeConnectId: stripeAccountId }
+      data: { stripeAccountId: stripeAccountId }
     });
   }
 
@@ -63,8 +63,8 @@ export async function getStripeDashboardLink() {
     where: { id: session.user.id }
   });
 
-  if (!user || !user.stripeConnectId) throw new Error('Stripe account not found');
+  if (!user || !user.stripeAccountId) throw new Error('Stripe account not found');
 
-  const loginLink = await stripe.accounts.createLoginLink(user.stripeConnectId);
+  const loginLink = await stripe.accounts.createLoginLink(user.stripeAccountId);
   return { url: loginLink.url };
 }

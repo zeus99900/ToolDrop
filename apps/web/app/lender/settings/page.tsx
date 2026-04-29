@@ -13,7 +13,7 @@ export default async function LenderSettingsPage() {
     where: { id: session.user.id }
   });
 
-  const isOnboarded = !!user?.stripeConnectId;
+  const isOnboarded = !!user?.stripeAccountId;
 
   const handleOnboard = async () => {
     'use server';

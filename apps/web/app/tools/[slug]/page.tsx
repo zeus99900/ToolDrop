@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { conditionLabels, conditionColors } from '@/lib/types';
 import { prisma } from '@repo/db';
 import { notFound } from 'next/navigation';
+import BookingSidebar from '@/components/listings/BookingSidebar';
 
 export default async function ToolDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -135,31 +136,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
             {/* Booking sidebar */}
             <div className="lg:col-span-1">
               <div className="sticky top-24 space-y-6">
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
-                  <div className="flex items-baseline gap-1 mb-1">
-                    <span className="text-3xl font-bold text-dark-900">${listing.pricePerDay}</span>
-                    <span className="text-gray-400">/day</span>
-                  </div>
-                  {listing.pricePerWeek && <p className="text-sm text-gray-500 mb-6">${listing.pricePerWeek}/week · Save {Math.round((1 - listing.pricePerWeek / (listing.pricePerDay * 7)) * 100)}%</p>}
-
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div><label className="block text-xs font-medium text-gray-500 mb-1">Start date</label><div className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:border-brand-300 transition-colors"><Calendar className="w-4 h-4 text-gray-400" /><span className="text-sm text-gray-400">Select</span></div></div>
-                    <div><label className="block text-xs font-medium text-gray-500 mb-1">End date</label><div className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:border-brand-300 transition-colors"><Calendar className="w-4 h-4 text-gray-400" /><span className="text-sm text-gray-400">Select</span></div></div>
-                  </div>
-
-                  <div className="flex gap-2 mb-4">
-                    <button className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-50 text-brand-700 border-2 border-brand-200 text-sm font-medium"><Truck className="w-4 h-4" />Delivery</button>
-                    <button className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-50 text-gray-600 border-2 border-transparent text-sm font-medium hover:bg-gray-100 transition-colors"><MapPin className="w-4 h-4" />Pickup</button>
-                  </div>
-
-                  <label className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-100 cursor-pointer mb-6">
-                    <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500" />
-                    <div className="flex-1"><p className="text-sm font-medium text-dark-900 flex items-center gap-1"><Shield className="w-3.5 h-3.5 text-emerald-600" />Damage Protection</p><p className="text-xs text-gray-500">Covers up to $500</p></div>
-                  </label>
-
-                  <Link href={`/checkout/${listing.id}`} className="btn-primary w-full !py-4 text-base text-center block" id="book-now-button">{listing.instantBook ? 'Instant Book' : 'Request to Book'}</Link>
-                  <p className="text-center text-xs text-gray-400 mt-3">{listing.instantBook ? "You won't be charged yet" : 'The lender has 24h to accept'}</p>
-                </div>
+                <BookingSidebar listing={listing} />
 
                 <div className="bg-white rounded-2xl border border-gray-200 p-6">
                   <div className="flex items-center gap-3 mb-4">

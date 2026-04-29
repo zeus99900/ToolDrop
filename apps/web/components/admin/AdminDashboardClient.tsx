@@ -134,12 +134,16 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
 
   const downloadTemplate = () => {
     const csvContent = "title,category,pricePerDay,pricePerHour,description\nDeWalt Hammer Drill,Power Tools,25,3,Professional heavy duty drill\nExtension Ladder,Ladders,15,2,20ft aluminum ladder";
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'tooldrop_bulk_template.csv';
-    a.click();
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "tooldrop_bulk_template.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const filteredUsers = allUsers.filter(u => 

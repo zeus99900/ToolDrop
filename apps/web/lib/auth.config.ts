@@ -15,12 +15,11 @@ export const authConfig: NextAuthConfig = {
       profile(profile) {
         return {
           id: profile.sub,
-          name: profile.name,
           email: profile.email,
           image: profile.picture,
           firstName: profile.given_name,
           lastName: profile.family_name,
-        };
+        } as any;
       },
     }),
   ],
@@ -45,6 +44,11 @@ export const authConfig: NextAuthConfig = {
         session.user.id = token.id as string;
         (session.user as any).firstName = token.firstName;
         (session.user as any).lastName = token.lastName;
+        
+        // Populate name for compatibility with standard components
+        if (!session.user.name && (token.firstName || token.lastName)) {
+          session.user.name = `${token.firstName || ''} ${token.lastName || ''}`.trim();
+        }
       }
       return session;
     },

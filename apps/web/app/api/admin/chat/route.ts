@@ -4,7 +4,10 @@ import { z } from 'zod';
 import { prisma } from '@repo/db';
 
 const ollama = createOllama({
-  baseURL: 'http://localhost:11434/api',
+  baseURL: 'https://ollama.com/api',
+  headers: {
+    'Authorization': `Bearer ${process.env.OLLAMA_API_KEY}`,
+  },
 });
 
 export const runtime = 'edge';

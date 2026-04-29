@@ -18,9 +18,10 @@ interface AdminDashboardClientProps {
   };
   recentBookings: any[];
   allUsers: any[];
+  allListings: any[];
 }
 
-export default function AdminDashboardClient({ stats, recentBookings, allUsers }: AdminDashboardClientProps) {
+export default function AdminDashboardClient({ stats, recentBookings, allUsers, allListings }: AdminDashboardClientProps) {
   const [tab, setTab] = useState<Tab>('overview');
 
   return (
@@ -125,6 +126,69 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers }
       )}
 
       {/* Other tabs can be implemented similarly with tables */}
+      {tab === 'listings' && (
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-fade-in">
+          <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+            <h3 className="font-semibold text-dark-900">Platform Inventory</h3>
+            <div className="flex gap-2">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+                <Search className="w-4 h-4 text-gray-400" />
+                <input placeholder="Search listings..." className="bg-transparent text-xs outline-none w-40" />
+              </div>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-left">
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Tool</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Lender</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Category</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Pricing</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="px-5 py-3"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {allListings.map(l => (
+                  <tr key={l.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                    <td className="px-5 py-4">
+                      <p className="font-medium text-dark-900">{l.title}</p>
+                      <p className="text-[10px] text-gray-400 font-mono">#{l.id.substring(0, 8)}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="text-sm text-dark-900">{l.lender.firstName} {l.lender.lastName}</p>
+                      <p className="text-xs text-gray-400">{l.lender.email}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="px-2 py-1 bg-gray-100 rounded text-[10px] text-gray-600 font-medium">{l.category.name}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="text-sm font-semibold text-dark-900">${l.pricePerDay}/day</p>
+                      {l.allowHourly && <p className="text-[10px] text-brand-600 font-medium">${l.pricePerHour}/hr enabled</p>}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={cn(
+                        'badge text-[10px]',
+                        l.isApproved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                      )}>
+                        {l.isApproved ? 'Approved' : 'Pending'}
+                      </span>
+                      {l.isOfficial && <span className="ml-1 badge bg-blue-100 text-blue-700 text-[10px]">Official</span>}
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <button className="p-1.5 rounded-lg hover:bg-gray-100">
+                        <MoreVertical className="w-4 h-4 text-gray-400" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {tab === 'bookings' && (
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-fade-in">
           <div className="p-6 border-b border-gray-50 flex justify-between items-center">
@@ -142,7 +206,7 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers }
                 <tr className="border-b border-gray-100 text-left">
                   <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Tool / ID</th>
                   <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Renter</th>
-                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Dates</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Mode / Info</th>
                   <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
                   <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Total</th>
                   <th className="px-5 py-3"></th>
@@ -160,12 +224,16 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers }
                       <p className="text-xs text-gray-400">{b.renter.email}</p>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-xs text-gray-600">{new Date(b.startDate).toLocaleDateString()} -</p>
-                      <p className="text-xs text-gray-600">{new Date(b.endDate).toLocaleDateString()}</p>
+                      {b.totalHours ? (
+                        <p className="text-xs text-brand-600 font-bold">{b.totalHours} Hour Rental</p>
+                      ) : (
+                        <p className="text-xs text-gray-600">{new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}</p>
+                      )}
                     </td>
                     <td className="px-5 py-4">
                       <span className={cn(
                         'badge text-[10px]',
+                        b.status === 'ACTIVATED' ? 'bg-emerald-100 text-emerald-700 animate-pulse' :
                         b.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
                         b.status === 'COMPLETED' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
                       )}>

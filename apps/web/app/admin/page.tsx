@@ -37,8 +37,18 @@ export default async function AdminPage() {
 
   // Fetch Users
   const allUsers = await prisma.user.findMany({
-    take: 20,
+    take: 50,
     orderBy: { createdAt: 'desc' },
+  });
+
+  // Fetch All Listings
+  const allListings = await prisma.listing.findMany({
+    take: 50,
+    orderBy: { createdAt: 'desc' },
+    include: {
+      lender: { select: { firstName: true, lastName: true, email: true } },
+      category: { select: { name: true } },
+    }
   });
 
   return (
@@ -64,6 +74,7 @@ export default async function AdminPage() {
             }}
             recentBookings={recentBookings}
             allUsers={allUsers}
+            allListings={allListings}
           />
         </div>
       </main>

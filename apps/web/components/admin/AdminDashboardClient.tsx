@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { 
   Users, Package, DollarSign, AlertTriangle, ArrowUpRight, Shield, 
-  Search, MoreVertical, Check, X, Calendar, Loader2, Trash2, Ban 
+  Search, MoreVertical, Check, X, Calendar, Loader2, Trash2, Ban, Plus 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';

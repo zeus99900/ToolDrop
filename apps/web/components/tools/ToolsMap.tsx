@@ -2,7 +2,7 @@
 
 import { GoogleMap, MarkerF, InfoWindowF } from '@react-google-maps/api';
 import { useState, useCallback } from 'react';
-import { Listing } from '@/lib/types';
+
 import Link from 'next/link';
 import { Star, MapPin } from 'lucide-react';
 

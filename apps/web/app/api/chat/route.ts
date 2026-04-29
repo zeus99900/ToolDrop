@@ -1,4 +1,4 @@
-import { createOllama } from 'ollama-ai-provider';
+import { createOllama } from 'ai-sdk-ollama';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
 import { prisma } from '@repo/db';
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   const result = await streamText({
-    model: ollama('llama3') as any, // TODO: ollama-ai-provider needs update for ai SDK v6 LanguageModelV2
+    model: ollama('llama3'),
     system: `You are the ToolDrop Scout, a helpful AI assistant for a tool rental marketplace in Halifax, Nova Scotia.
     Your goal is to help users find tools, explain how the platform works, and provide advice on DIY projects.
     Be friendly, helpful, and "handy". Use tool-related puns occasionally.

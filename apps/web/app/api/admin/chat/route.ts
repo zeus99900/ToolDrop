@@ -1,4 +1,4 @@
-import { createOllama } from 'ollama-ai-provider';
+import { createOllama } from 'ai-sdk-ollama';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
 import { prisma } from '@repo/db';
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   const result = await streamText({
-    model: ollama('llama3') as any, // TODO: ollama-ai-provider needs update for ai SDK v6 LanguageModelV2
+    model: ollama('llama3'),
     system: `You are the ToolDrop Admin Copilot. You help administrators manage the platform.
     You have access to tools to fetch data and perform actions.
     Be professional, concise, and helpful.

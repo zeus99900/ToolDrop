@@ -137,7 +137,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
                 <div className="absolute bottom-4 left-4 flex gap-2">
                   {listing.instantBook && <span className="badge bg-brand-500 text-white shadow-lg text-sm px-3 py-1"><Zap className="w-3.5 h-3.5" />Instant Book</span>}
                   {listing.isOfficial && <span className="badge bg-indigo-600 text-white shadow-lg text-sm px-3 py-1"><ShieldCheck className="w-3.5 h-3.5" />ToolDrop Official</span>}
-                  <span className={cn('badge shadow-lg text-sm px-3 py-1', conditionColors[listing.condition])}>{conditionLabels[listing.condition]}</span>
+                  <span className={cn('badge shadow-lg text-sm px-3 py-1', conditionColors[listing.condition as any])}>{conditionLabels[listing.condition as any]}</span>
                 </div>
               </div>
 
@@ -225,7 +225,11 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
 
           <div className="mt-16">
             <h2 className="text-2xl font-bold text-dark-900 mb-6">Similar Tools</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">{similar.map((l) => (<ToolCard key={l.id} listing={l} />))}</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {similar.map((l) => (
+                <ToolCard key={l.id} listing={l as any} />
+              ))}
+            </div>
           </div>
         </div>
       </main>

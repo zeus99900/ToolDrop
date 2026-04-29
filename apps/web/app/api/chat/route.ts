@@ -10,7 +10,7 @@ const ollama = createOllama({
   },
 });
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
   const { messages } = await req.json();

@@ -3,7 +3,7 @@
 import { useChat } from 'ai/react';
 import { Bot, User, Send, X, MessageCircle, Wrench, Loader2, Minus, Maximize2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '../../lib/utils';
 import Link from 'next/link';
 
 export default function UserAIAssistant() {

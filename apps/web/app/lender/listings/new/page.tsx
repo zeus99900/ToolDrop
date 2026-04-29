@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Upload, X, Zap, Info, MapPin } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { cn } from '@/lib/utils';
+import { cn } from '../../lib/utils';
 import { categories } from '@/lib/mock-data';
 import { createListing } from '@/lib/main-actions';
 import { toast } from 'sonner';
@@ -55,7 +55,7 @@ export default function CreateListingPage() {
         description,
         pricePerDay: Number(pricePerDay),
         pricePerWeek: pricePerWeek ? Number(pricePerWeek) : undefined,
-        pricePerHour: allowHourly && pricePerHour ? Number(pricePerHour) : undefined,
+        pricePerHour: (allowHourly && pricePerHour) ? Number(pricePerHour) : undefined,
         allowHourly,
         deposit: Number(deposit),
         deliveryOption: deliveryOption as any,

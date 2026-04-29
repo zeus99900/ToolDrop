@@ -2,6 +2,7 @@ import { createOllama } from 'ai-sdk-ollama';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
 import { prisma } from '@repo/db';
+import { auth } from '@/lib/auth';
 
 const ollama = createOllama({
   baseURL: 'https://ollama.com',
@@ -12,13 +13,17 @@ export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
   const { messages } = await req.json();
+  const session = await auth();
+  const userName = session?.user?.name || 'Guest';
 
   const result = await streamText({
     model: ollama('ministral-3:8b'),
     system: `You are the ToolDrop Scout, a helpful AI assistant for a tool rental marketplace in Halifax, Nova Scotia.
     Your goal is to help users find tools, explain how the platform works, and provide advice on DIY projects.
     Be friendly, helpful, and "handy". Use tool-related puns occasionally.
-    If asked about specific tools, use your search tools to find them.`,
+    If asked about specific tools, use your search tools to find them.
+    
+    You are currently talking to ${userName}. Address them by name if appropriate.`,
     messages,
     tools: {
       searchTools: tool({

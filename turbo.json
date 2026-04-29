@@ -26,7 +26,9 @@
         "LENDER_FEE_PERCENT",
         "RENTER_FEE_PERCENT",
         "DAMAGE_PROTECTION_PERCENT",
-        "REDIS_URL"
+        "REDIS_URL",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]

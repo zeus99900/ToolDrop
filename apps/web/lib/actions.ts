@@ -304,7 +304,7 @@ export async function respondToBooking(bookingId: string, action: 'ACCEPT' | 'DE
     sendBookingConfirmationEmail(
       booking.renter.email,
       booking.renter.firstName,
-      booking.listing.title
+      booking.listing?.title || 'your rental'
     ).catch(console.error);
   }
 

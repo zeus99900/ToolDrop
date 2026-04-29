@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Calendar, Truck, MapPin, Shield, Zap, Info, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
 interface BookingSidebarProps {

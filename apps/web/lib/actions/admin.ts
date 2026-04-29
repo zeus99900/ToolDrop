@@ -159,27 +159,26 @@ export async function bulkImportListings(listingsData: any[]) {
     const adminId = session.user.id;
     if (!adminId) throw new Error('Admin user ID not found');
 
-    // Get categories to map names to IDs
     const categories = await prisma.category.findMany();
     const categoryMap = new Map(categories.map(c => [c.name.toLowerCase(), c.id]));
-
-    // Use a default category if not found
     const defaultCategoryId = categories[0]?.id;
 
     const createPromises = listingsData.map(data => {
       const categoryId = categoryMap.get(data.category?.toLowerCase()) || defaultCategoryId;
+      const slug = (data.title || 'tool').toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') + '-' + Math.random().toString(36).substring(2, 7);
       
       return prisma.listing.create({
         data: {
           title: data.title,
+          slug: slug,
           description: data.description || 'Professional tool available for rental.',
           pricePerDay: parseFloat(data.pricePerDay) || 0,
           pricePerHour: data.pricePerHour ? parseFloat(data.pricePerHour) : null,
           allowHourly: !!data.pricePerHour,
           condition: 'EXCELLENT',
-          locationName: 'ToolDrop Main Hub',
-          latitude: 44.6488, // Halifax
+          latitude: 44.6488, 
           longitude: -63.5752,
+          depositAmount: 0, // Admin tools have 0 deposit by default
           isApproved: true,
           isOfficial: true,
           lenderId: adminId,

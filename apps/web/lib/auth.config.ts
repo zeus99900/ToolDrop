@@ -38,6 +38,9 @@ export const authConfig: NextAuthConfig = {
         token.lastName = (user as any).lastName;
         token.avatarUrl = (user as any).avatarUrl;
         token.role = (user as any).role;
+        token.status = (user as any).status;
+        token.idVerified = (user as any).idVerified;
+        token.phoneVerified = (user as any).phoneVerified;
       }
       return token;
     },
@@ -48,6 +51,9 @@ export const authConfig: NextAuthConfig = {
         (session.user as any).lastName = token.lastName;
         session.user.image = token.avatarUrl as string;
         (session.user as any).role = token.role;
+        (session.user as any).status = token.status;
+        (session.user as any).idVerified = token.idVerified;
+        (session.user as any).phoneVerified = token.phoneVerified;
         
         // Populate name for compatibility with standard components
         if (!session.user.name && (token.firstName || token.lastName)) {
@@ -58,14 +64,20 @@ export const authConfig: NextAuthConfig = {
     },
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
+      const role = (auth?.user as any)?.role;
       const protectedPaths = ['/dashboard', '/lender', '/checkout', '/messages', '/notifications', '/admin'];
       const authPaths = ['/login', '/signup'];
       
       const isProtected = protectedPaths.some((p) => nextUrl.pathname.startsWith(p));
       const isAuthPath = authPaths.some((p) => nextUrl.pathname.startsWith(p));
+      const isAdminPath = nextUrl.pathname.startsWith('/admin');
 
       if (isProtected && !isLoggedIn) {
         return Response.redirect(new URL('/login', nextUrl));
+      }
+      
+      if (isAdminPath && role !== 'ADMIN') {
+        return Response.redirect(new URL('/', nextUrl));
       }
       
       if (isAuthPath && isLoggedIn) {

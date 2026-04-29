@@ -19,11 +19,13 @@ export async function createBooking(data: {
   if (!session?.user?.id) {
     throw new Error('Unauthorized');
   }
+  
+  const userId = session.user.id;
 
   // 1. Fetch the listing and parties
   const [listing, renter, lender] = await Promise.all([
     prisma.listing.findUnique({ where: { id: data.listingId } }),
-    prisma.user.findUnique({ where: { id: session.user.id } }),
+    prisma.user.findUnique({ where: { id: userId } }),
     prisma.user.findFirst({ 
       where: { listings: { some: { id: data.listingId } } } 
     }),
@@ -57,7 +59,7 @@ export async function createBooking(data: {
   const result = await prisma.$transaction(async (tx) => {
     const booking = await tx.booking.create({
       data: {
-        renterId: session.user.id,
+        renterId: userId,
         lenderId: listing.lenderId,
         listingId: listing.id,
         status: 'CONFIRMED',
@@ -79,7 +81,7 @@ export async function createBooking(data: {
     await tx.payment.create({
       data: {
         bookingId: booking.id,
-        renterId: session.user.id,
+        renterId: userId,
         lenderId: listing.lenderId,
         stripePaymentIntentId: data.paymentIntentId,
         amount: totalCharged,

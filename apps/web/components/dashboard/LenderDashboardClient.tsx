@@ -6,7 +6,7 @@ import { DollarSign, Package, Clock, Star, Plus, BarChart3, Calendar, Eye, MoreV
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { cn } from '@/lib/utils';
-import { respondToBooking } from '@/lib/actions';
+import { respondToBooking } from '@/lib/main-actions';
 import { toast } from 'sonner';
 
 interface LenderDashboardClientProps {

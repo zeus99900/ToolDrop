@@ -5,7 +5,7 @@ import { Package, Clock, History, Heart, Star, Calendar, MapPin, Truck, MessageS
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { submitReview } from '@/lib/actions';
+import { submitReview } from '@/lib/main-actions';
 
 type Tab = 'active' | 'past' | 'saved';
 

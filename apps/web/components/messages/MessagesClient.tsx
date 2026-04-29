@@ -5,7 +5,7 @@ import { Send, Search, Phone, MoreVertical, ArrowLeft, CheckCheck, MessageSquare
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { cn } from '@/lib/utils';
-import { sendMessage } from '@/lib/actions';
+import { sendMessage } from '@/lib/main-actions';
 import { toast } from 'sonner';
 
 interface MessagesClientProps {

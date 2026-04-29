@@ -8,7 +8,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { cn } from '@/lib/utils';
 import { categories } from '@/lib/mock-data';
-import { createListing } from '@/lib/actions';
+import { createListing } from '@/lib/main-actions';
 import { toast } from 'sonner';
 import { UploadDropzone } from '@/lib/uploadthing';
 import LocationInput from '@/components/ui/LocationInput';

@@ -15,17 +15,7 @@ export default async function LenderSettingsPage() {
 
   const isOnboarded = !!user?.stripeAccountId;
 
-  const handleOnboard = async () => {
-    'use server';
-    const { url } = await onboardLender();
-    redirect(url);
-  };
 
-  const handleDashboard = async () => {
-    'use server';
-    const { url } = await getStripeDashboardLink();
-    redirect(url);
-  };
 
   return (
     <>
@@ -67,7 +57,7 @@ export default async function LenderSettingsPage() {
                       To start earning money on ToolDrop, you need to connect a bank account or debit card through Stripe. 
                       Stripe is our secure payment partner used by millions of businesses.
                     </p>
-                    <form action={handleOnboard}>
+                    <form action={onboardLender}>
                       <button className="btn-primary w-full flex items-center justify-center gap-2 !py-4">
                         Connect with Stripe
                         <ExternalLink className="w-4 h-4" />
@@ -82,7 +72,7 @@ export default async function LenderSettingsPage() {
                         according to your payout schedule.
                       </p>
                     </div>
-                    <form action={handleDashboard}>
+                    <form action={getStripeDashboardLink}>
                       <button className="btn-secondary w-full flex items-center justify-center gap-2 !py-4">
                         View Stripe Dashboard
                         <ExternalLink className="w-4 h-4" />

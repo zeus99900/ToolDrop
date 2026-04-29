@@ -49,7 +49,7 @@ export async function onboardLender() {
     type: 'account_onboarding',
   });
 
-  return { url: accountLink.url };
+  redirect(accountLink.url);
 }
 
 /**
@@ -66,5 +66,5 @@ export async function getStripeDashboardLink() {
   if (!user || !user.stripeAccountId) throw new Error('Stripe account not found');
 
   const loginLink = await stripe.accounts.createLoginLink(user.stripeAccountId);
-  return { url: loginLink.url };
+  redirect(loginLink.url);
 }

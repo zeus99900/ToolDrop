@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type Tab = 'overview' | 'users' | 'listings' | 'bookings' | 'finance';
+type Tab = 'overview' | 'users' | 'listings' | 'bookings' | 'finance' | 'disputes';
 
 interface AdminDashboardClientProps {
   stats: {
@@ -23,6 +23,19 @@ interface AdminDashboardClientProps {
 
 export default function AdminDashboardClient({ stats, recentBookings, allUsers, allListings }: AdminDashboardClientProps) {
   const [tab, setTab] = useState<Tab>('overview');
+  const [userSearch, setUserSearch] = useState('');
+  const [listingSearch, setListingSearch] = useState('');
+
+  const filteredUsers = allUsers.filter(u => 
+    u.email?.toLowerCase().includes(userSearch.toLowerCase()) || 
+    u.firstName?.toLowerCase().includes(userSearch.toLowerCase()) ||
+    u.lastName?.toLowerCase().includes(userSearch.toLowerCase())
+  );
+
+  const filteredListings = allListings.filter(l => 
+    l.title?.toLowerCase().includes(listingSearch.toLowerCase()) ||
+    l.lender?.email?.toLowerCase().includes(listingSearch.toLowerCase())
+  );
 
   return (
     <div className="animate-fade-in">
@@ -32,6 +45,7 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
           ['users', 'Users'],
           ['listings', 'Listings'],
           ['bookings', 'Bookings'],
+          ['disputes', 'Disputes'],
           ['finance', 'Finance']
         ] as [Tab, string][]).map(([id, label]) => (
           <button 
@@ -133,7 +147,12 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
             <div className="flex gap-2">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
                 <Search className="w-4 h-4 text-gray-400" />
-                <input placeholder="Search listings..." className="bg-transparent text-xs outline-none w-40" />
+                <input 
+                  placeholder="Search listings..." 
+                  className="bg-transparent text-xs outline-none w-40" 
+                  value={listingSearch}
+                  onChange={(e) => setListingSearch(e.target.value)}
+                />
               </div>
             </div>
           </div>
@@ -150,7 +169,7 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
                 </tr>
               </thead>
               <tbody>
-                {allListings.map(l => (
+                {filteredListings.map(l => (
                   <tr key={l.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                     <td className="px-5 py-4">
                       <p className="font-medium text-dark-900">{l.title}</p>
@@ -177,8 +196,13 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
                       {l.isOfficial && <span className="ml-1 badge bg-blue-100 text-blue-700 text-[10px]">Official</span>}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <button className="p-1.5 rounded-lg hover:bg-gray-100">
-                        <MoreVertical className="w-4 h-4 text-gray-400" />
+                      {!l.isApproved && (
+                        <button className="text-emerald-600 hover:text-emerald-700 text-xs font-bold mr-3 flex items-center gap-1 inline-flex">
+                          <Check className="w-3 h-3" /> Approve
+                        </button>
+                      )}
+                      <button className="text-red-600 hover:text-red-700 text-xs font-bold flex items-center gap-1 inline-flex">
+                        <X className="w-3 h-3" /> {l.isApproved ? 'Delete' : 'Reject'}
                       </button>
                     </td>
                   </tr>
@@ -253,6 +277,101 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
           </div>
         </div>
       )}
-    </div>
-  );
-}
+      {tab === 'users' && (
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-fade-in">
+          <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+            <h3 className="font-semibold text-dark-900">Registered Users</h3>
+            <div className="flex gap-2">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+                <Search className="w-4 h-4 text-gray-400" />
+                <input 
+                  placeholder="Search users..." 
+                  className="bg-transparent text-xs outline-none w-40" 
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-left">
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">User</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Role</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Joined</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Activity</th>
+                  <th className="px-5 py-3"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map(u => (
+                  <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-600 text-xs font-bold">
+                          {u.firstName?.charAt(0) || u.email?.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-dark-900">{u.firstName} {u.lastName}</p>
+                          <p className="text-xs text-gray-400">{u.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={cn(
+                        'px-2 py-0.5 rounded text-[10px] font-bold uppercase',
+                        u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'
+                      )}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={cn(
+                        'w-2 h-2 rounded-full inline-block mr-2',
+                        u.status === 'ACTIVE' ? 'bg-green-500' : 'bg-amber-500'
+                      )} />
+                      <span className="text-xs text-gray-600">{u.status}</span>
+                    </td>
+                    <td className="px-5 py-4 text-xs text-gray-400">
+                      {new Date(u.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="text-xs text-gray-600">{u.totalListings || 0} Tools · {u.totalRentals || 0} Rentals</p>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <button className="text-brand-600 hover:text-brand-700 text-xs font-bold mr-3">Edit</button>
+                      <button className="text-red-600 hover:text-red-700 text-xs font-bold">Suspend</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab === 'disputes' && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center py-20 animate-fade-in">
+          <AlertTriangle className="w-12 h-12 text-amber-200 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-dark-900">Dispute Center</h3>
+          <p className="text-gray-500 max-w-sm mx-auto mt-2">There are currently {stats.openDisputes} open disputes requiring investigation. Our support team is notified of each incident.</p>
+          <button className="btn-secondary mt-6 border-amber-200 text-amber-700 hover:bg-amber-50">View Queue</button>
+        </div>
+      )}
+
+      {tab === 'finance' && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center py-20">
+            <DollarSign className="w-12 h-12 text-brand-200 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-dark-900">Financial Reports</h3>
+            <p className="text-gray-500 max-w-sm mx-auto mt-2">Comprehensive financial auditing and payout management will appear here once the platform processes more volume.</p>
+            <button className="btn-primary mt-6">Export Q2 Report</button>
+          </div>
+        </div>
+      )}
+        < / d i v > 
+     ) ; 
+ }  
+ 

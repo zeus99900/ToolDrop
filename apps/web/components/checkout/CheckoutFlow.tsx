@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Truck, MapPin, Shield, Calendar, ArrowRight, Check, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useSearchParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { createBooking } from '@/lib/actions/bookings';
@@ -27,11 +28,14 @@ interface CheckoutFlowProps {
 }
 
 export default function CheckoutFlow({ listing }: CheckoutFlowProps) {
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [delivery, setDelivery] = useState(listing.deliveryOption !== 'PICKUP_ONLY');
-  const [protection, setProtection] = useState(false);
+  const [mode, setMode] = useState<'daily' | 'hourly'>((searchParams?.get('mode') as any) || 'daily');
+  const [startDate, setStartDate] = useState<string>(searchParams?.get('startDate') || '');
+  const [endDate, setEndDate] = useState<string>(searchParams?.get('endDate') || '');
+  const [hours, setHours] = useState<number>(parseInt(searchParams?.get('hours') || '3'));
+  const [delivery, setDelivery] = useState(searchParams?.get('delivery') === 'true' || listing.deliveryOption !== 'PICKUP_ONLY');
+  const [protection, setProtection] = useState(searchParams?.get('protection') === 'true');
   const [agreed, setAgreed] = useState(false);
   
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -39,17 +43,19 @@ export default function CheckoutFlow({ listing }: CheckoutFlowProps) {
   const [pricing, setPricing] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [bookingRef, setBookingRef] = useState<string>('');
-
-  // Auto-set dummy dates for prototype
+  
   useEffect(() => {
-    const start = new Date();
-    start.setDate(start.getDate() + 1); // Tomorrow
-    const end = new Date();
-    end.setDate(end.getDate() + 4); // +3 days
-    
-    setStartDate(start.toISOString().split('T')[0]);
-    setEndDate(end.toISOString().split('T')[0]);
-  }, []);
+    if (!startDate) {
+      const start = new Date();
+      start.setDate(start.getDate() + 1);
+      setStartDate(start.toISOString().split('T')[0]);
+    }
+    if (!endDate && mode === 'daily') {
+      const end = new Date();
+      end.setDate(new Date(startDate || new Date()).getDate() + 3);
+      setEndDate(end.toISOString().split('T')[0]);
+    }
+  }, [startDate, endDate, mode]);
 
   const preparePayment = async () => {
     setIsLoading(true);
@@ -89,9 +95,10 @@ export default function CheckoutFlow({ listing }: CheckoutFlowProps) {
   };
 
   // Pricing calculations for the UI before step 3
-  const diffTime = startDate && endDate ? Math.abs(new Date(endDate).getTime() - new Date(startDate).getTime()) : 0;
-  const days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1);
-  const subtotal = listing.pricePerDay * days;
+  const subtotal = mode === 'daily' 
+    ? listing.pricePerDay * (startDate && endDate ? Math.max(1, Math.ceil(Math.abs(new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1) : 1)
+    : ((listing as any).pricePerHour || listing.pricePerDay / 8) * hours;
+    
   const protectionFee = protection ? subtotal * 0.15 : 0;
   const serviceFee = subtotal * 0.10;
   const deliveryFee = delivery ? (listing.deliveryFee || 0) : 0;
@@ -160,11 +167,12 @@ export default function CheckoutFlow({ listing }: CheckoutFlowProps) {
                 <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white/30 text-2xl font-bold flex-shrink-0">
                   {listing.brand?.charAt(0) || listing.title.charAt(0)}
                 </div>
-                <div>
                   <h3 className="font-semibold text-dark-900">{listing.title}</h3>
-                  <p className="text-sm text-gray-500">{listing.brand} · {startDate} to {endDate} · {days} days</p>
+                  <p className="text-sm text-gray-500">
+                    {listing.brand} · {startDate} 
+                    {mode === 'daily' ? ` to ${endDate} · ${Math.max(1, Math.ceil(Math.abs(new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)} days` : ` · ${hours} hours`}
+                  </p>
                   <p className="text-sm text-gray-500">{delivery ? '🚚 Delivery' : '📍 Pickup'}</p>
-                </div>
               </div>
             </div>
             <div>
@@ -199,6 +207,8 @@ export default function CheckoutFlow({ listing }: CheckoutFlowProps) {
                         listingId: listing.id,
                         startDate,
                         endDate,
+                        mode,
+                        hours,
                         delivery,
                         protection,
                         paymentIntentId: 'mock_payment_intent_123'
@@ -223,6 +233,8 @@ export default function CheckoutFlow({ listing }: CheckoutFlowProps) {
                   listingId={listing.id}
                   startDate={startDate}
                   endDate={endDate}
+                  mode={mode}
+                  hours={hours}
                   delivery={delivery}
                   protection={protection}
                   onSuccess={(ref: string) => {
@@ -271,7 +283,11 @@ export default function CheckoutFlow({ listing }: CheckoutFlowProps) {
             <h3 className="font-semibold text-dark-900 mb-4">Price Summary</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">${listing.pricePerDay} × {days} days</span>
+                <span className="text-gray-500">
+                  {mode === 'daily' 
+                    ? `$${listing.pricePerDay} × ${Math.max(1, Math.ceil(Math.abs(new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)} days` 
+                    : `$${((listing as any).pricePerHour || listing.pricePerDay / 8).toFixed(2)} × ${hours} hours`}
+                </span>
                 <span className="text-dark-900">${(pricing?.subtotal || subtotal).toFixed(2)}</span>
               </div>
               {delivery && (
@@ -310,7 +326,7 @@ export default function CheckoutFlow({ listing }: CheckoutFlowProps) {
 }
 
 // Inner Stripe form component
-function StripePaymentForm({ clientSecret, listingId, startDate, endDate, delivery, protection, onSuccess }: any) {
+function StripePaymentForm({ clientSecret, listingId, startDate, endDate, mode, hours, delivery, protection, onSuccess }: any) {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -339,6 +355,8 @@ function StripePaymentForm({ clientSecret, listingId, startDate, endDate, delive
           listingId,
           startDate,
           endDate,
+          mode,
+          hours,
           delivery,
           protection,
           paymentIntentId: paymentIntent.id

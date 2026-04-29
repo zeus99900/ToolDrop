@@ -4,31 +4,36 @@ import { prisma } from '@repo/db';
  * Fetch featured listings for the homepage.
  */
 export async function getFeaturedListings(limit = 8) {
-  const listings = await prisma.listing.findMany({
-      where: {
-        isApproved: true,
-        isAvailable: true,
-      },
-      take: limit,
-      include: {
-        lender: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            avatarUrl: true,
-            avgRatingAsLender: true,
-            totalRentals: true,
-          },
+  try {
+    const listings = await prisma.listing.findMany({
+        where: {
+          isApproved: true,
+          isAvailable: true,
         },
-        category: true,
-      },
-      orderBy: {
-        createdAt: 'desc', // Assuming newer items might be featured, or could sort by avgRating
-      },
-    });
+        take: limit,
+        include: {
+          lender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+              avgRatingAsLender: true,
+              totalRentals: true,
+            },
+          },
+          category: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
 
-  return JSON.parse(JSON.stringify(listings));
+    return JSON.parse(JSON.stringify(listings));
+  } catch (error) {
+    console.error("Error fetching featured listings:", error);
+    return [];
+  }
 }
 
 /**
@@ -47,93 +52,103 @@ export async function getListings({
   userLat?: number;
   userLng?: number;
 }) {
-  const whereClause: any = {
-    isApproved: true,
-    isAvailable: true,
-  };
-
-  if (query) {
-    whereClause.OR = [
-      { title: { contains: query, mode: 'insensitive' } },
-      { description: { contains: query, mode: 'insensitive' } },
-      { brand: { contains: query, mode: 'insensitive' } },
-    ];
-  }
-
-  if (category) {
-    whereClause.category = {
-      slug: category,
+  try {
+    const whereClause: any = {
+      isApproved: true,
+      isAvailable: true,
     };
-  }
 
-  let orderBy: any = { createdAt: 'desc' };
-  
-  if (sort === 'price_asc') {
-    orderBy = { pricePerDay: 'asc' };
-  } else if (sort === 'price_desc') {
-    orderBy = { pricePerDay: 'desc' };
-  }
-
-  const listings = await prisma.listing.findMany({
-    where: whereClause,
-    orderBy,
-    include: {
-      lender: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          avatarUrl: true,
-          avgRatingAsLender: true,
-          totalRentals: true,
-        },
-      },
-      category: true,
-    },
-  });
-
-  // Calculate distance if user coordinates provided
-  let results = listings.map((listing: any) => {
-    if (userLat && userLng && listing.latitude && listing.longitude) {
-      const R = 6371; // Earth's radius in km
-      const dLat = (listing.latitude - userLat) * (Math.PI / 180);
-      const dLon = (listing.longitude - userLng) * (Math.PI / 180);
-      const a = 
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(userLat * (Math.PI / 180)) * Math.cos(listing.latitude * (Math.PI / 180)) * 
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return { ...listing, distance: R * c };
+    if (query) {
+      whereClause.OR = [
+        { title: { contains: query, mode: 'insensitive' } },
+        { description: { contains: query, mode: 'insensitive' } },
+        { brand: { contains: query, mode: 'insensitive' } },
+      ];
     }
-    return { ...listing, distance: null };
-  });
 
-  // Sort by distance if requested
-  if (sort === 'distance' && userLat && userLng) {
-    results.sort((a, b) => (a.distance || 0) - (b.distance || 0));
-  } else if (sort === 'rating') {
-    results.sort((a, b) => (b.lender.avgRatingAsLender || 0) - (a.lender.avgRatingAsLender || 0));
+    if (category) {
+      whereClause.category = {
+        slug: category,
+      };
+    }
+
+    let orderBy: any = { createdAt: 'desc' };
+    
+    if (sort === 'price_asc') {
+      orderBy = { pricePerDay: 'asc' };
+    } else if (sort === 'price_desc') {
+      orderBy = { pricePerDay: 'desc' };
+    }
+
+    const listings = await prisma.listing.findMany({
+      where: whereClause,
+      orderBy,
+      include: {
+        lender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            avgRatingAsLender: true,
+            totalRentals: true,
+          },
+        },
+        category: true,
+      },
+    });
+
+    // Calculate distance if user coordinates provided
+    let results = listings.map((listing: any) => {
+      if (userLat && userLng && listing.latitude && listing.longitude) {
+        const R = 6371; // Earth's radius in km
+        const dLat = (listing.latitude - userLat) * (Math.PI / 180);
+        const dLon = (listing.longitude - userLng) * (Math.PI / 180);
+        const a = 
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(userLat * (Math.PI / 180)) * Math.cos(listing.latitude * (Math.PI / 180)) * 
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return { ...listing, distance: R * c };
+      }
+      return { ...listing, distance: null };
+    });
+
+    // Sort by distance if requested
+    if (sort === 'distance' && userLat && userLng) {
+      results.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    } else if (sort === 'rating') {
+      results.sort((a, b) => (b.lender.avgRatingAsLender || 0) - (a.lender.avgRatingAsLender || 0));
+    }
+
+    return JSON.parse(JSON.stringify(results));
+  } catch (error) {
+    console.error("Error fetching listings:", error);
+    return [];
   }
-
-  return JSON.parse(JSON.stringify(results));
 }
 
 /**
  * Fetch all categories with their listing counts.
  */
 export async function getCategories() {
-  const categories = await prisma.category.findMany({
-      include: {
-        _count: {
-          select: { listings: true }
-        }
-      },
-    orderBy: {
-      name: 'asc'
-    }
-  });
-  
-  return JSON.parse(JSON.stringify(categories));
+  try {
+    const categories = await prisma.category.findMany({
+        include: {
+          _count: {
+            select: { listings: true }
+          }
+        },
+      orderBy: {
+        name: 'asc'
+      }
+    });
+    
+    return JSON.parse(JSON.stringify(categories));
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    return [];
+  }
 }
 
 /**

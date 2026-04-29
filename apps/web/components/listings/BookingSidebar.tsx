@@ -12,68 +12,99 @@ interface BookingSidebarProps {
 
 export default function BookingSidebar({ listing }: BookingSidebarProps) {
   const router = useRouter();
+  const [mode, setMode] = useState<'daily' | 'hourly'>(listing.allowHourly ? 'hourly' : 'daily');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [hours, setHours] = useState(3);
   const [delivery, setDelivery] = useState(false);
   const [protection, setProtection] = useState(true);
 
   const stats = useMemo(() => {
-    if (!startDate || !endDate) return null;
-    
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    if (end < start) return null;
-    
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    
-    const subtotal = listing.pricePerDay * diffDays;
-    const serviceFee = subtotal * 0.1; // 10% service fee
-    const protectionFee = protection ? (subtotal * 0.15) : 0; // 15% protection fee
-    const deliveryFee = delivery ? (listing.deliveryFee || 0) : 0;
-    
-    const total = subtotal + serviceFee + protectionFee + deliveryFee + listing.depositAmount;
-    
-    return {
-      days: diffDays,
-      subtotal,
-      serviceFee,
-      protectionFee,
-      deliveryFee,
-      total
-    };
-  }, [startDate, endDate, protection, delivery, listing]);
+    if (mode === 'daily') {
+      if (!startDate || !endDate) return null;
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) return null;
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      const subtotal = listing.pricePerDay * diffDays;
+      const serviceFee = subtotal * 0.1;
+      const protectionFee = protection ? (subtotal * 0.15) : 0;
+      const deliveryFee = delivery ? (listing.deliveryFee || 0) : 0;
+      return {
+        days: diffDays,
+        subtotal,
+        serviceFee,
+        protectionFee,
+        deliveryFee,
+        total: subtotal + serviceFee + protectionFee + deliveryFee + listing.depositAmount
+      };
+    } else {
+      // Hourly mode
+      if (!startDate) return null;
+      const subtotal = (listing.pricePerHour || listing.pricePerDay / 8) * hours;
+      const serviceFee = subtotal * 0.1;
+      const protectionFee = protection ? (subtotal * 0.15) : 0;
+      const deliveryFee = delivery ? (listing.deliveryFee || 0) : 0;
+      return {
+        hours,
+        subtotal,
+        serviceFee,
+        protectionFee,
+        deliveryFee,
+        total: subtotal + serviceFee + protectionFee + deliveryFee + listing.depositAmount
+      };
+    }
+  }, [mode, startDate, endDate, hours, protection, delivery, listing]);
 
   const handleBook = () => {
     if (!stats) return;
-    
     const params = new URLSearchParams({
       startDate,
-      endDate,
+      endDate: mode === 'daily' ? endDate : '',
+      hours: mode === 'hourly' ? hours.toString() : '',
       delivery: delivery.toString(),
-      protection: protection.toString()
+      protection: protection.toString(),
+      mode
     });
-    
     router.push(`/checkout/${listing.id}?${params.toString()}`);
   };
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
       <div className="flex items-baseline gap-1 mb-1">
-        <span className="text-3xl font-bold text-dark-900">${listing.pricePerDay}</span>
-        <span className="text-gray-400">/day</span>
+        <span className="text-3xl font-bold text-dark-900">${mode === 'daily' ? listing.pricePerDay : (listing.pricePerHour || (listing.pricePerDay / 8).toFixed(2))}</span>
+        <span className="text-gray-400">/{mode === 'daily' ? 'day' : 'hr'}</span>
       </div>
-      {listing.pricePerWeek && (
-        <p className="text-sm text-gray-500 mb-6">
-          ${listing.pricePerWeek}/week · Save {Math.round((1 - listing.pricePerWeek / (listing.pricePerDay * 7)) * 100)}%
-        </p>
+      
+      {/* Mode Toggle */}
+      {listing.allowHourly && (
+        <div className="flex p-1 bg-gray-100 rounded-xl mb-6 mt-4">
+          <button 
+            onClick={() => setMode('hourly')}
+            className={cn(
+              "flex-1 py-2 text-xs font-bold rounded-lg transition-all",
+              mode === 'hourly' ? "bg-white text-brand-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+            )}
+          >
+            Hourly
+          </button>
+          <button 
+            onClick={() => setMode('daily')}
+            className={cn(
+              "flex-1 py-2 text-xs font-bold rounded-lg transition-all",
+              mode === 'daily' ? "bg-white text-brand-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+            )}
+          >
+            Daily
+          </button>
+        </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Start date</label>
-          <div className="relative">
+      {mode === 'daily' ? (
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Start date</label>
             <input 
               type="date" 
               className="input-field !py-2 !px-3 text-sm" 
@@ -82,10 +113,8 @@ export default function BookingSidebar({ listing }: BookingSidebarProps) {
               min={new Date().toISOString().split('T')[0]}
             />
           </div>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">End date</label>
-          <div className="relative">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">End date</label>
             <input 
               type="date" 
               className="input-field !py-2 !px-3 text-sm" 
@@ -95,7 +124,35 @@ export default function BookingSidebar({ listing }: BookingSidebarProps) {
             />
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="space-y-4 mb-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Pickup Date</label>
+            <input 
+              type="date" 
+              className="input-field !py-2 !px-3 text-sm" 
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Duration (Hours)</label>
+            <div className="flex items-center gap-3">
+              <input 
+                type="range" 
+                min="1" 
+                max="48" 
+                value={hours}
+                onChange={(e) => setHours(parseInt(e.target.value))}
+                className="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-500"
+              />
+              <span className="text-sm font-bold text-dark-900 w-12 text-right">{hours}h</span>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">Timer starts at pickup. Max 48h.</p>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-2 mb-4">
         <button 
@@ -144,8 +201,12 @@ export default function BookingSidebar({ listing }: BookingSidebarProps) {
       {stats && (
         <div className="space-y-2 mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100 animate-in fade-in slide-in-from-top-1">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">${listing.pricePerDay} × {stats.days} days</span>
-            <span className="text-dark-900 font-medium">${stats.subtotal}</span>
+            <span className="text-gray-500">
+              {mode === 'daily' 
+                ? `$${listing.pricePerDay} × ${stats.days} days` 
+                : `$${(listing.pricePerHour || listing.pricePerDay / 8).toFixed(2)} × ${stats.hours} hours`}
+            </span>
+            <span className="text-dark-900 font-medium">${stats.subtotal.toFixed(2)}</span>
           </div>
           {delivery && (
             <div className="flex justify-between text-sm">

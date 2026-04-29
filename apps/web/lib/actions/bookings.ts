@@ -9,7 +9,9 @@ import { notifyLenderOfBooking } from '@/lib/sms';
 export async function createBooking(data: {
   listingId: string;
   startDate: string;
-  endDate: string;
+  endDate?: string;
+  hours?: number;
+  mode: 'daily' | 'hourly';
   delivery: boolean;
   protection: boolean;
   paymentIntentId: string;
@@ -37,11 +39,21 @@ export async function createBooking(data: {
 
   // 2. Re-calculate pricing (Server-side source of truth)
   const start = new Date(data.startDate);
-  const end = new Date(data.endDate);
-  const diffTime = Math.abs(end.getTime() - start.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  
-  const subtotal = listing.pricePerDay * diffDays;
+  let subtotal = 0;
+  let diffDays = 0;
+  let end = start;
+
+  if (data.mode === 'daily' && data.endDate) {
+    end = new Date(data.endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    subtotal = listing.pricePerDay * diffDays;
+  } else if (data.mode === 'hourly' && data.hours) {
+    const hourlyRate = (listing as any).pricePerHour || listing.pricePerDay / 8;
+    subtotal = hourlyRate * data.hours;
+    // For hourly, we don't set a hard end date until pickup, but we can set an estimate
+    end = new Date(start.getTime() + data.hours * 60 * 60 * 1000);
+  }
   
   const renterFeePercent = parseFloat(process.env.RENTER_FEE_PERCENT || '10');
   const lenderFeePercent = parseFloat(process.env.LENDER_FEE_PERCENT || '15');
@@ -60,13 +72,15 @@ export async function createBooking(data: {
     const booking = await tx.booking.create({
       data: {
         renterId: userId,
-        lenderId: listing.lenderId,
+        lenderId: (listing as any).lenderId,
         listingId: listing.id,
         status: 'CONFIRMED',
         startDate: start,
         endDate: end,
-        totalDays: diffDays,
-        pricePerDay: listing.pricePerDay,
+        totalDays: data.mode === 'daily' ? diffDays : null,
+        totalHours: data.mode === 'hourly' ? data.hours : null,
+        pricePerDay: data.mode === 'daily' ? listing.pricePerDay : null,
+        pricePerHour: data.mode === 'hourly' ? ((listing as any).pricePerHour || listing.pricePerDay / 8) : null,
         subtotal,
         platformFee: platformFee, // Total platform take
         deliveryFee,
@@ -141,4 +155,65 @@ export async function createBooking(data: {
   revalidatePath(`/tools/${listing.slug}`);
   
   return { success: true, bookingId: result.id };
+}
+
+/**
+ * Lender confirms the tool has been picked up.
+ * This starts the countdown timer for hourly rentals.
+ */
+export async function confirmPickup(bookingId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Unauthorized');
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { listing: true }
+  });
+
+  if (!booking || booking.lenderId !== session.user.id) {
+    throw new Error('Booking not found or unauthorized');
+  }
+
+  const result = await prisma.booking.update({
+    where: { id: bookingId },
+    data: {
+      pickedUpAt: new Date(),
+      status: 'ACTIVATED'
+    }
+  });
+
+  revalidatePath('/dashboard');
+  revalidatePath('/lender');
+  
+  return { success: true, pickedUpAt: result.pickedUpAt };
+}
+
+/**
+ * Lender confirms the tool has been returned.
+ * This stops the countdown timer.
+ */
+export async function confirmReturn(bookingId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Unauthorized');
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+  });
+
+  if (!booking || booking.lenderId !== session.user.id) {
+    throw new Error('Booking not found or unauthorized');
+  }
+
+  const result = await prisma.booking.update({
+    where: { id: bookingId },
+    data: {
+      actualReturnAt: new Date(),
+      status: 'COMPLETED'
+    }
+  });
+
+  revalidatePath('/dashboard');
+  revalidatePath('/lender');
+  
+  return { success: true, returnedAt: result.actualReturnAt };
 }

@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { cn } from '@/lib/utils';
 import { respondToBooking } from '@/lib/main-actions';
+import { confirmPickup, confirmReturn } from '@/lib/actions/bookings';
 import { toast } from 'sonner';
 
 interface LenderDashboardClientProps {
@@ -51,6 +52,40 @@ export default function LenderDashboardClient({ listings, bookings, stats }: Len
       }
     } catch {
       toast.error('Something went wrong.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleConfirmPickup = async (bookingId: string) => {
+    setProcessingId(bookingId);
+    try {
+      const result = await confirmPickup(bookingId);
+      if (result.success) {
+        toast.success('Pickup confirmed! Timer started.');
+        setLocalBookings(prev => prev.map(b => 
+          b.id === bookingId ? { ...b, status: 'ACTIVATED', pickedUpAt: result.pickedUpAt } : b
+        ));
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to confirm pickup');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleConfirmReturn = async (bookingId: string) => {
+    setProcessingId(bookingId);
+    try {
+      const result = await confirmReturn(bookingId);
+      if (result.success) {
+        toast.success('Return confirmed! Timer stopped.');
+        setLocalBookings(prev => prev.map(b => 
+          b.id === bookingId ? { ...b, status: 'COMPLETED', actualReturnAt: result.returnedAt } : b
+        ));
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to confirm return');
     } finally {
       setProcessingId(null);
     }
@@ -122,8 +157,8 @@ export default function LenderDashboardClient({ listings, bookings, stats }: Len
               <div>
                 <h2 className="text-lg font-semibold text-dark-900 mb-4">Action Required</h2>
                 <div className="space-y-3">
-                  {localBookings.filter(b => ['PENDING', 'RETURN_PENDING'].includes(b.status)).length > 0 ? (
-                    localBookings.filter(b => ['PENDING', 'RETURN_PENDING'].includes(b.status)).map(booking => {
+                  {localBookings.filter(b => ['PENDING', 'CONFIRMED', 'ACTIVATED', 'RETURN_PENDING'].includes(b.status)).length > 0 ? (
+                    localBookings.filter(b => ['PENDING', 'CONFIRMED', 'ACTIVATED', 'RETURN_PENDING'].includes(b.status)).map(booking => {
                       const cfg = statusMap[booking.status] || statusMap.PENDING;
                       return (
                         <div key={booking.id} className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:shadow-md transition-shadow">
@@ -134,6 +169,7 @@ export default function LenderDashboardClient({ listings, bookings, stats }: Len
                               <span>{booking.renter.firstName} {booking.renter.lastName} · ★{booking.renter.avgRatingAsRenter || 'N/A'}</span>
                               <span>{new Date(booking.startDate).toLocaleDateString()}</span>
                               <span className="font-medium text-dark-900">${booking.totalCharged}</span>
+                              {booking.totalHours && <span className="badge bg-brand-50 text-brand-700 ml-2">{booking.totalHours}h Rental</span>}
                             </div>
                           </div>
                           <div className="flex gap-2 w-full sm:w-auto">
@@ -155,8 +191,23 @@ export default function LenderDashboardClient({ listings, bookings, stats }: Len
                                 </button>
                               </>
                             )}
-                            {booking.status === 'RETURN_PENDING' && (
-                              <button className="btn-primary flex-1 sm:flex-initial !py-2 !px-4 text-sm">Confirm Return</button>
+                            {booking.status === 'CONFIRMED' && (
+                              <button 
+                                onClick={() => handleConfirmPickup(booking.id)}
+                                disabled={processingId === booking.id}
+                                className="btn-primary flex-1 sm:flex-initial !py-2 !px-4 text-sm"
+                              >
+                                {processingId === booking.id ? 'Starting...' : 'Confirm Pickup'}
+                              </button>
+                            )}
+                            {(booking.status === 'ACTIVATED' || booking.status === 'RETURN_PENDING') && (
+                              <button 
+                                onClick={() => handleConfirmReturn(booking.id)}
+                                disabled={processingId === booking.id}
+                                className="btn-primary flex-1 sm:flex-initial !py-2 !px-4 text-sm"
+                              >
+                                {processingId === booking.id ? 'Finishing...' : 'Confirm Return'}
+                              </button>
                             )}
                           </div>
                         </div>

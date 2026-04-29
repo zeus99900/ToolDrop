@@ -208,6 +208,8 @@ model Listing {
   pricePerDay         Float
   pricePerWeek        Float?
   pricePerMonth       Float?
+  pricePerHour        Float?
+  allowHourly         Boolean        @default(false)
   depositAmount       Float
   deliveryOption      DeliveryOption @default(BOTH)
   deliveryFee         Float?
@@ -309,10 +311,12 @@ model Booking {
   listingId           String?
   kitId               String?
   status              BookingStatus @default(PENDING)
-  startDate           DateTime      @db.Date
-  endDate             DateTime      @db.Date
-  totalDays           Int
-  pricePerDay         Float
+  startDate           DateTime
+  endDate             DateTime
+  totalDays           Int?
+  totalHours          Float?
+  pricePerDay         Float?
+  pricePerHour        Float?
   subtotal            Float
   platformFee         Float
   deliveryFee         Float         @default(0)
@@ -333,7 +337,9 @@ model Booking {
   cancelledBy         String?
   cancellationReason  String?
   activatedAt         DateTime?
+  pickedUpAt          DateTime?
   returnRequestedAt   DateTime?
+  actualReturnAt      DateTime?
   completedAt         DateTime?
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt

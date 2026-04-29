@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { submitReview } from '@/lib/main-actions';
+import RentalTimer from '@/components/listings/RentalTimer';
 
 type Tab = 'active' | 'past' | 'saved';
 
@@ -97,11 +98,16 @@ export default function UserDashboardClient({ rentals }: UserDashboardClientProp
                       <span className={cn('badge', cfg.color)}>{cfg.label}</span>
                     </div>
                     <h3 className="font-semibold text-dark-900 mb-1">{r.listing.title}</h3>
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-2">
                       <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{new Date(r.startDate).toLocaleDateString()} - {new Date(r.endDate).toLocaleDateString()}</span>
                       <span className="flex items-center gap-1">{r.isDelivery ? <Truck className="w-3.5 h-3.5" /> : <MapPin className="w-3.5 h-3.5" />}{r.isDelivery ? 'Delivery' : 'Pickup'}</span>
                       <span className="font-medium text-dark-900">${r.totalCharged} CAD</span>
                     </div>
+
+                    {r.totalHours && r.pickedUpAt && r.status === 'ACTIVATED' && (
+                      <RentalTimer pickedUpAt={r.pickedUpAt} totalHours={r.totalHours} className="mb-3" />
+                    )}
+
                     <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
                       <div className="w-5 h-5 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-[8px] font-bold">
                         {r.lender.firstName?.charAt(0) || r.lender.email?.charAt(0) || 'U'}

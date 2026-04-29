@@ -37,6 +37,7 @@ export const authConfig: NextAuthConfig = {
         token.firstName = (user as any).firstName;
         token.lastName = (user as any).lastName;
         token.avatarUrl = (user as any).avatarUrl;
+        token.role = (user as any).role;
       }
       return token;
     },
@@ -46,6 +47,7 @@ export const authConfig: NextAuthConfig = {
         (session.user as any).firstName = token.firstName;
         (session.user as any).lastName = token.lastName;
         session.user.image = token.avatarUrl as string;
+        (session.user as any).role = token.role;
         
         // Populate name for compatibility with standard components
         if (!session.user.name && (token.firstName || token.lastName)) {

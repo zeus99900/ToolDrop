@@ -20,7 +20,13 @@
         "TWILIO_AUTH_TOKEN",
         "TWILIO_PHONE_NUMBER",
         "NEXTAUTH_SECRET",
-        "NEXTAUTH_URL"
+        "NEXTAUTH_URL",
+        "AUTH_SECRET",
+        "PLATFORM_FEE_PERCENT",
+        "LENDER_FEE_PERCENT",
+        "RENTER_FEE_PERCENT",
+        "DAMAGE_PROTECTION_PERCENT",
+        "REDIS_URL"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]

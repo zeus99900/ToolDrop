@@ -36,6 +36,8 @@ export const metadata: Metadata = {
 };
 
 
+import UserAIAssistant from '@/components/ai/UserAIAssistant';
+
 export default function RootLayout({
   children,
 }: {
@@ -52,6 +54,7 @@ export default function RootLayout({
             <AuthProvider>
               <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
               {children}
+              <UserAIAssistant />
             <Toaster
               position="top-right"
               toastOptions={{

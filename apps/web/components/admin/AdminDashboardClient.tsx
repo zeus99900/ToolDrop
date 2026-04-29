@@ -17,6 +17,7 @@ import {
   bulkImportListings 
 } from '@/lib/actions/admin';
 import { useRouter } from 'next/navigation';
+import AdminAICopilot from './AdminAICopilot';
 
 type Tab = 'overview' | 'users' | 'listings' | 'bookings' | 'finance' | 'disputes';
 
@@ -685,6 +686,7 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
           </div>
         </div>
       )}
+      <AdminAICopilot />
     </div>
   );
 }

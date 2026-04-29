@@ -157,11 +157,11 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
                       <p className="text-[10px] text-gray-400 font-mono">#{l.id.substring(0, 8)}</p>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-sm text-dark-900">{l.lender.firstName} {l.lender.lastName}</p>
-                      <p className="text-xs text-gray-400">{l.lender.email}</p>
+                      <p className="text-sm text-dark-900">{l.lender?.firstName || 'Unknown'} {l.lender?.lastName || ''}</p>
+                      <p className="text-xs text-gray-400">{l.lender?.email || 'No email'}</p>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="px-2 py-1 bg-gray-100 rounded text-[10px] text-gray-600 font-medium">{l.category.name}</span>
+                      <span className="px-2 py-1 bg-gray-100 rounded text-[10px] text-gray-600 font-medium">{l.category?.name || 'Uncategorized'}</span>
                     </td>
                     <td className="px-5 py-4">
                       <p className="text-sm font-semibold text-dark-900">${l.pricePerDay}/day</p>
@@ -220,8 +220,8 @@ export default function AdminDashboardClient({ stats, recentBookings, allUsers, 
                       <p className="text-[10px] text-gray-400 font-mono">#{b.id.substring(0, 8)}</p>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-sm text-dark-900">{b.renter.firstName} {b.renter.lastName}</p>
-                      <p className="text-xs text-gray-400">{b.renter.email}</p>
+                      <p className="text-sm text-dark-900">{b.renter?.firstName || 'User'} {b.renter?.lastName || ''}</p>
+                      <p className="text-xs text-gray-400">{b.renter?.email || 'No email'}</p>
                     </td>
                     <td className="px-5 py-4">
                       {b.totalHours ? (

@@ -95,7 +95,6 @@ export async function createListing(formData: z.infer<typeof createListingSchema
       deliveryFee: data.deliveryFee || null,
       instantBook: data.instantBook,
       images: data.images || [],
-      address: data.address,
       latitude: data.latitude,
       longitude: data.longitude,
       lenderId: session.user.id,

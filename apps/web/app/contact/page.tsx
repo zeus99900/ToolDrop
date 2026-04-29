@@ -1,3 +1,5 @@
+'use client';
+
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Mail, Phone, MapPin, MessageSquare, Clock, Shield } from 'lucide-react';

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
@@ -9,6 +10,12 @@ import AuthProvider from '@/components/providers/AuthProvider';
 import GoogleMapsProvider from '@/components/providers/GoogleMapsProvider';
 import { Suspense } from 'react';
 import './globals.css';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   title: {
@@ -36,7 +43,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className="min-h-screen flex flex-col font-sans">
+      <body className={`min-h-screen flex flex-col font-sans ${inter.variable} antialiased`}>
         <PostHogProvider>
           <Suspense fallback={null}>
             <PostHogPageView />

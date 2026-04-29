@@ -1,5 +1,7 @@
+const { withUt } = require("uploadthing/tw");
+
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+module.exports = withUt({
   darkMode: 'class',
   content: [
     './app/**/*.{ts,tsx}',
@@ -41,7 +43,7 @@ module.exports = {
         danger:  '#ef4444',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['var(--font-inter)', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       borderRadius: {
         'component': '8px',
@@ -87,4 +89,4 @@ module.exports = {
   plugins: [
     require('@tailwindcss/typography'),
   ],
-};
+});

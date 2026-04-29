@@ -139,6 +139,11 @@ export default function Header() {
                             <p className="text-sm font-semibold text-dark-900">{session.user.name || 'User'}</p>
                             <p className="text-xs text-gray-400 truncate">{session.user.email}</p>
                           </div>
+                          {(session.user as any).role === 'ADMIN' && (
+                            <Link href="/admin" className="flex items-center gap-2 px-4 py-2 text-sm text-brand-600 bg-brand-50 hover:bg-brand-100 font-medium" onClick={() => setUserMenuOpen(false)}>
+                              <Shield className="w-4 h-4" />Admin Panel
+                            </Link>
+                          )}
                           <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>
                             <LayoutDashboard className="w-4 h-4 text-gray-400" />My Rentals
                           </Link>

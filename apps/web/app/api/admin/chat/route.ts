@@ -18,7 +18,6 @@ export async function POST(req: Request) {
 
   const result = await streamText({
     model: ollama('gpt-oss:120b'),
-    maxSteps: 3,
     system: `You are the ToolDrop Admin Copilot. You help administrators manage the platform.
     You have access to tools to fetch data and perform actions.
     Be professional, concise, and helpful.
@@ -49,5 +48,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 }

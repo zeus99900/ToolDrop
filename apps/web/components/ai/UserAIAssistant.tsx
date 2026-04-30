@@ -1,7 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { type UIMessage } from 'ai';
+import { type UIMessage, TextStreamChatTransport } from 'ai';
 import { Bot, User, Send, X, MessageCircle, Wrench, Loader2, Minus, Maximize2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { clsx, type ClassValue } from 'clsx';
@@ -15,7 +15,9 @@ import Link from 'next/link';
 export default function UserAIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const { messages, sendMessage, status } = useChat();
+  const { messages, sendMessage, status } = useChat({
+    transport: new TextStreamChatTransport({ api: '/api/chat' }),
+  });
   const [input, setInput] = useState('');
   
   const scrollRef = useRef<HTMLDivElement>(null);

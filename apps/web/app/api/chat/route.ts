@@ -13,6 +13,13 @@ export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
   const { messages } = await req.json();
+  
+  // Transform messages to match CoreMessage[] schema (mapping 'parts' to 'content')
+  const formattedMessages = messages.map((m: any) => ({
+    role: m.role,
+    content: m.content || (Array.isArray(m.parts) ? m.parts.map((p: any) => p.text || '').join('') : ''),
+  }));
+
   const session = await auth();
   const userName = session?.user?.name || 'Guest';
 
@@ -24,7 +31,7 @@ export async function POST(req: Request) {
     If asked about specific tools, use your search tools to find them.
     
     You are currently talking to ${userName}. Address them by name if appropriate.`,
-    messages,
+    messages: formattedMessages,
     tools: {
       searchTools: tool({
         description: 'Search for available tools in the marketplace',

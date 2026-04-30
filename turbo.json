@@ -28,7 +28,9 @@
         "DAMAGE_PROTECTION_PERCENT",
         "REDIS_URL",
         "GOOGLE_CLIENT_ID",
-        "GOOGLE_CLIENT_SECRET"
+        "GOOGLE_CLIENT_SECRET",
+        "OLLAMA_API_KEY",
+        "AUTH_TRUST_HOST"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]

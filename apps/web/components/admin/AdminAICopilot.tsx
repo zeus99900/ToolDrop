@@ -1,7 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { type UIMessage, TextStreamChatTransport } from 'ai';
+import { type UIMessage, DefaultChatTransport } from 'ai';
 import { Bot, User, Send, X, Sparkles, Terminal, BarChart3, ShieldAlert, Loader2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { clsx, type ClassValue } from 'clsx';
@@ -14,7 +14,7 @@ function cn(...inputs: ClassValue[]) {
 export default function AdminAICopilot() {
   const [isOpen, setIsOpen] = useState(false);
   const { messages, sendMessage, status } = useChat({
-    transport: new TextStreamChatTransport({ api: '/api/admin/chat' }),
+    transport: new DefaultChatTransport({ api: '/api/admin/chat' }),
   });
   const [input, setInput] = useState('');
   
